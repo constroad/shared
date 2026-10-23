@@ -1,0 +1,5 @@
+# With a `files` list in package.json only dist/ and casos.json are packed;
+# this file exists so the root .gitignore (which ignores dist/) is not used.
+src/
+scripts/
+coverage/

@@ -1,0 +1,995 @@
+{
+ "version": 1,
+ "description": "Casos dorados de la planilla: cada app los corre por SU adaptador y debe dar estos céntimos.",
+ "cases": [
+  {
+   "id": "mensual-enero",
+   "description": "Mensual de S/ 3 000, enero completo (31 días): S/ 3 000",
+   "fn": "closeFixedPeriod",
+   "input": {
+    "salaries": [
+     {
+      "kind": "monthly",
+      "amount": 3000,
+      "from": "2025-01-01"
+     }
+    ],
+    "date": "2026-01-15",
+    "absences": [],
+    "advancedCentimos": 0
+   },
+   "expected": {
+    "dueCentimos": 300000,
+    "periodDays": 31
+   }
+  },
+  {
+   "id": "mensual-febrero",
+   "description": "Mensual de S/ 3 000, febrero completo (28 días): S/ 3 000",
+   "fn": "closeFixedPeriod",
+   "input": {
+    "salaries": [
+     {
+      "kind": "monthly",
+      "amount": 3000,
+      "from": "2025-01-01"
+     }
+    ],
+    "date": "2026-02-15",
+    "absences": [],
+    "advancedCentimos": 0
+   },
+   "expected": {
+    "dueCentimos": 300000,
+    "periodDays": 28
+   }
+  },
+  {
+   "id": "mensual-febrero-bisiesto",
+   "description": "Mensual de S/ 3 000, febrero de 2028 (29 días): S/ 3 000",
+   "fn": "closeFixedPeriod",
+   "input": {
+    "salaries": [
+     {
+      "kind": "monthly",
+      "amount": 3000,
+      "from": "2025-01-01"
+     }
+    ],
+    "date": "2028-02-15",
+    "absences": [],
+    "advancedCentimos": 0
+   },
+   "expected": {
+    "dueCentimos": 300000,
+    "periodDays": 29
+   }
+  },
+  {
+   "id": "mensual-abril",
+   "description": "Mensual de S/ 3 000, abril completo (30 días): S/ 3 000",
+   "fn": "closeFixedPeriod",
+   "input": {
+    "salaries": [
+     {
+      "kind": "monthly",
+      "amount": 3000,
+      "from": "2025-01-01"
+     }
+    ],
+    "date": "2026-04-15",
+    "absences": [],
+    "advancedCentimos": 0
+   },
+   "expected": {
+    "dueCentimos": 300000,
+    "periodDays": 30
+   }
+  },
+  {
+   "id": "mensual-falta-febrero",
+   "description": "Mensual con una falta en febrero: S/ 2 900 (falta al treintavo)",
+   "fn": "closeFixedPeriod",
+   "input": {
+    "salaries": [
+     {
+      "kind": "monthly",
+      "amount": 3000,
+      "from": "2025-01-01"
+     }
+    ],
+    "date": "2026-02-11",
+    "absences": [
+     "2026-02-11"
+    ],
+    "advancedCentimos": 0
+   },
+   "expected": {
+    "dueCentimos": 290000
+   }
+  },
+  {
+   "id": "quincena-16-dias",
+   "description": "Quincena de S/ 1 500 del 16 al 31 de enero (16 días): S/ 1 500",
+   "fn": "closeFixedPeriod",
+   "input": {
+    "salaries": [
+     {
+      "kind": "biweekly",
+      "amount": 1500,
+      "from": "2025-01-01"
+     }
+    ],
+    "date": "2026-01-20",
+    "absences": [],
+    "advancedCentimos": 0
+   },
+   "expected": {
+    "dueCentimos": 150000,
+    "periodDays": 16
+   }
+  },
+  {
+   "id": "quincena-13-dias",
+   "description": "Quincena de S/ 1 500 del 16 al 28 de febrero (13 días): S/ 1 500",
+   "fn": "closeFixedPeriod",
+   "input": {
+    "salaries": [
+     {
+      "kind": "biweekly",
+      "amount": 1500,
+      "from": "2025-01-01"
+     }
+    ],
+    "date": "2026-02-20",
+    "absences": [],
+    "advancedCentimos": 0
+   },
+   "expected": {
+    "dueCentimos": 150000,
+    "periodDays": 13
+   }
+  },
+  {
+   "id": "mensual-semana-cruza-mes",
+   "description": "Semana del 26/01 al 01/02/2026: 6 días a 3 000 ÷ 31 y 1 a 3 000 ÷ 28",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-01-26",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-01-27",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-01-28",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-01-29",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-01-30",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-01-31",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-02-01",
+      "scheduled": false,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "jornadaMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "monthly",
+      "amount": 3000,
+      "from": "2025-01-01"
+     }
+    ]
+   },
+   "expected": {
+    "totalCentimos": 68779,
+    "lines": [
+     {
+      "concept": "sueldo",
+      "centimos": 58065,
+      "period": "2026-01"
+     },
+     {
+      "concept": "sueldo",
+      "centimos": 10714,
+      "period": "2026-02"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mensual-falta-en-la-semana",
+   "description": "Semana de febrero con una falta: 7 días a 3 000 ÷ 28 menos 3 000 ÷ 30",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-02-09",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-02-10",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-02-11",
+      "scheduled": true,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-02-12",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-02-13",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-02-14",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-02-15",
+      "scheduled": false,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "jornadaMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "monthly",
+      "amount": 3000,
+      "from": "2025-01-01"
+     }
+    ]
+   },
+   "expected": {
+    "totalCentimos": 65000,
+    "lines": [
+     {
+      "concept": "sueldo",
+      "centimos": 75000,
+      "period": "2026-02"
+     },
+     {
+      "concept": "faltas",
+      "centimos": -10000,
+      "period": "2026-02"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mensual-extras",
+   "description": "Extras de un mensual: jornal (3 000 ÷ 30) ÷ 8 × 1,25 dos horas y × 1,35 una hora",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-02-10",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 120,
+      "overtime35Min": 60,
+      "restDayMin": 0
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "monthly",
+      "amount": 3000,
+      "from": "2025-01-01"
+     }
+    ]
+   },
+   "expected": {
+    "totalCentimos": 15527,
+    "lines": [
+     {
+      "concept": "sueldo",
+      "centimos": 10714,
+      "period": "2026-02"
+     },
+     {
+      "concept": "extra_25",
+      "centimos": 3125,
+      "period": null
+     },
+     {
+      "concept": "extra_35",
+      "centimos": 1688,
+      "period": null
+     }
+    ]
+   }
+  },
+  {
+   "id": "jornal-semana-completa",
+   "description": "Jornal de S/ 80, semana completa, descanso «semana_completa»",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-10-19",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-20",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-21",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-22",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-23",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-24",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-25",
+      "scheduled": false,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "jornadaMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "daily",
+      "amount": 80,
+      "from": "2026-01-01"
+     }
+    ]
+   },
+   "expected": {
+    "totalCentimos": 56000,
+    "lines": [
+     {
+      "concept": "dias",
+      "centimos": 48000,
+      "period": null
+     },
+     {
+      "concept": "descanso_semanal",
+      "centimos": 8000,
+      "period": null
+     }
+    ]
+   }
+  },
+  {
+   "id": "jornal-semana-completa-con-falta",
+   "description": "Jornal de S/ 80 con una falta, «semana_completa»: sin descanso",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-10-19",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-20",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-21",
+      "scheduled": true,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-22",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-23",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-24",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-25",
+      "scheduled": false,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "jornadaMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "daily",
+      "amount": 80,
+      "from": "2026-01-01"
+     }
+    ]
+   },
+   "expected": {
+    "totalCentimos": 40000,
+    "lines": [
+     {
+      "concept": "dias",
+      "centimos": 40000,
+      "period": null
+     }
+    ]
+   }
+  },
+  {
+   "id": "jornal-proporcional-con-falta",
+   "description": "Jornal de S/ 80 con una falta, «proporcional»: 5/6 de jornal",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-10-19",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-20",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-21",
+      "scheduled": true,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-22",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-23",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-24",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-25",
+      "scheduled": false,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "jornadaMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "daily",
+      "amount": 80,
+      "from": "2026-01-01"
+     }
+    ],
+    "policy": {
+     "weeklyRest": "proporcional"
+    }
+   },
+   "expected": {
+    "totalCentimos": 46667,
+    "lines": [
+     {
+      "concept": "dias",
+      "centimos": 40000,
+      "period": null
+     },
+     {
+      "concept": "descanso_semanal",
+      "centimos": 6667,
+      "period": null
+     }
+    ]
+   }
+  },
+  {
+   "id": "jornal-ninguno",
+   "description": "Jornal de S/ 80, semana completa, «ninguno»: sin descanso",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-10-19",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-20",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-21",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-22",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-23",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-24",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-25",
+      "scheduled": false,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "jornadaMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "daily",
+      "amount": 80,
+      "from": "2026-01-01"
+     }
+    ],
+    "policy": {
+     "weeklyRest": "ninguno"
+    }
+   },
+   "expected": {
+    "totalCentimos": 48000,
+    "lines": [
+     {
+      "concept": "dias",
+      "centimos": 48000,
+      "period": null
+     }
+    ]
+   }
+  },
+  {
+   "id": "por-hora",
+   "description": "Por hora a S/ 12,50: 48 h, 1 h extra al 25 % y el descanso de 8 h",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-10-19",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 60,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-20",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-21",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-22",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-23",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-24",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "jornadaMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     },
+     {
+      "date": "2026-10-25",
+      "scheduled": false,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "jornadaMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "hourly",
+      "amount": 12.5,
+      "from": "2026-01-01"
+     }
+    ]
+   },
+   "expected": {
+    "totalCentimos": 71563,
+    "lines": [
+     {
+      "concept": "horas",
+      "centimos": 60000,
+      "period": null
+     },
+     {
+      "concept": "descanso_semanal",
+      "centimos": 10000,
+      "period": null
+     },
+     {
+      "concept": "extra_25",
+      "centimos": 1563,
+      "period": null
+     }
+    ]
+   }
+  },
+  {
+   "id": "descanso-trabajado",
+   "description": "Jornal de S/ 80, 4 h en su domingo: valor hora × horas, sin recargo",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-10-25",
+      "scheduled": false,
+      "worked": true,
+      "excused": false,
+      "regularMin": 0,
+      "jornadaMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 240
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "daily",
+      "amount": 80,
+      "from": "2026-01-01"
+     }
+    ]
+   },
+   "expected": {
+    "totalCentimos": 4000,
+    "lines": [
+     {
+      "concept": "descanso_trabajado",
+      "centimos": 4000,
+      "period": null
+     }
+    ]
+   }
+  }
+ ]
+}

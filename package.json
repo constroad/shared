@@ -1,0 +1,25 @@
+{
+  "name": "@constroad/planilla",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cálculo canónico de planilla de ConstRoad (Pulso, Portal, Inframaq): puro, en céntimos enteros, sin dependencias.",
+  "license": "UNLICENSED",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "casos.json"
+  ],
+  "scripts": {
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.10.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.15",
+    "typescript": "^5.9.3"
+  }
+}
