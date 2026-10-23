@@ -991,5 +991,8 @@
     ]
    }
   }
+ ],
+ "pending": [
+  "SPEC.md §8.1: el jornalero en un día de jornada corta (jornal completo o por horas). Ningún caso lo fija todavía: todos los días laborables tienen 8 h."
  ]
 }

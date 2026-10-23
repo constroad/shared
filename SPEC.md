@@ -47,7 +47,7 @@ va en soles; la salida, en céntimos.
 - Por hora: el monto.
 - Jornal diario: jornal ÷ la jornada del día, 8 h si el día no tiene jornada.
   Es lo que Pulso ya hacía, y con una jornada de 8 h da lo mismo que ÷ 8.
-  **Pregunta abierta para José (§8.1).**
+  **Pendiente de José (§8.1).**
 
 ## 4. Sueldo fijo: adelanto semanal y cierre del periodo (decisión de José)
 
@@ -176,10 +176,13 @@ las semanas ya pagadas, y `closeFixedPeriod` devuelve el saldo
 
 ## 8. Preguntas abiertas para José
 
-1. **Valor hora del jornalero**: Pulso divide el jornal por la jornada del día
-   (con una jornada de 6 h, la hora vale jornal ÷ 6); el sueldo fijo divide por
-   8. ¿Se unifica? Si se pasa todo a ÷ 8, un jornalero de jornada corta cobra
-   menos la extra.
+1. **El jornalero en un día de jornada corta (el sábado de 5 h), PENDIENTE**:
+   hoy el paquete hace lo de Pulso. El día trabajado paga el jornal completo, y
+   la hora (base de la extra) vale jornal ÷ la jornada del día. Portal e
+   Inframaq pagan ese día por horas (jornal ÷ 8 × horas). José decide cuál
+   queda. Hasta entonces, **los casos dorados no fijan esto**: todos sus días
+   laborables tienen 8 h, así que dan lo mismo con cualquiera de las dos
+   reglas. El caso de la jornada corta entra a `casos.json` con la decisión.
 2. **Pulso no paga hoy el descanso semanal**: su pago estimado equivale a
    `ninguno`. Cuando Configuración tenga la opción, cada empresa nueva arranca
    con `semana_completa`. ¿Las que ya usan Pulso también? Su estimado subiría

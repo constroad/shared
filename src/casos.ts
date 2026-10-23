@@ -30,5 +30,7 @@ export type GoldenCase = GoldenPayCase | GoldenCloseCase;
 export interface GoldenCases {
   version: number;
   description: string;
+  /** Decisions still open: no case fixes them yet (SPEC.md §8). */
+  pending: string[];
   cases: GoldenCase[];
 }
