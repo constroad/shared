@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import type { GoldenCases } from './casos';
+import type { GoldenCases, GoldenPayCase, GoldenShift } from './casos';
 import { closeFixedPeriod } from './fixedClose';
 import { payDays } from './payDays';
 
@@ -13,6 +13,20 @@ describe('casos.json', () => {
     const ids = golden.cases.map((goldenCase) => goldenCase.id);
     expect(ids).toEqual(expect.arrayContaining(['mensual-febrero', 'mensual-febrero-bisiesto', 'quincena-16-dias', 'mensual-semana-cruza-mes', 'mensual-falta-febrero', 'mensual-extras', 'jornal-semana-completa', 'jornal-proporcional-con-falta', 'jornal-ninguno']));
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('the attendance of a case adds up to its PayDays: worked minutes = regular + overtime, on the day the shift started', () => {
+    const minutesOf = (shift: GoldenShift): number => (Date.parse(`${shift.end}:00Z`) - Date.parse(`${shift.start}:00Z`)) / 60_000 - shift.breakMin;
+    const withAttendance = golden.cases.filter((goldenCase): goldenCase is GoldenPayCase => goldenCase.fn === 'payDays' && Boolean(goldenCase.attendance));
+    expect(withAttendance.length).toBeGreaterThanOrEqual(3);
+    for (const goldenCase of withAttendance) {
+      for (const day of goldenCase.attendance!.days) {
+        const payDay = goldenCase.input.days.find((candidate) => candidate.date === day.date)!;
+        expect(day.shifts.every((shift) => shift.start.startsWith(day.date))).toBe(true);
+        expect(payDay.regularMin + payDay.overtime25Min + payDay.overtime35Min).toBe(day.shifts.reduce((total, shift) => total + minutesOf(shift), 0));
+        expect(payDay.regularMin).toBe(Math.min(day.jornadaMin, payDay.regularMin + payDay.overtime25Min + payDay.overtime35Min));
+      }
+    }
   });
 
   it.each(golden.cases.map((goldenCase) => [goldenCase.id, goldenCase] as const))('%s', (_id, goldenCase) => {

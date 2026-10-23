@@ -9,11 +9,28 @@ import type { Salary } from './salary';
  * differently; these cases do.
  */
 
+/** A shift as it happened, in Lima time (`YYYY-MM-DDTHH:mm`); a shift that crosses midnight belongs to the day it STARTED. */
+export interface GoldenShift {
+  start: string;
+  end: string;
+  breakMin: number;
+}
+
+/**
+ * The attendance behind a case, for an app to test ITS adapter: from these
+ * shifts it must build the case’s `PayDay`s. `jornadaMin` is the app’s own
+ * jornada that day (it splits regular from overtime before the package).
+ */
+export interface GoldenAttendance {
+  days: { date: string; jornadaMin: number; shifts: GoldenShift[] }[];
+}
+
 export interface GoldenPayCase {
   id: string;
   description: string;
   fn: 'payDays';
   input: { days: PayDay[]; salaries: Salary[]; policy?: Partial<PayPolicy> };
+  attendance?: GoldenAttendance;
   expected: { totalCentimos: number; lines: { concept: PayLineConcept; centimos: number; period: string | null }[] };
 }
 

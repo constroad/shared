@@ -65,6 +65,23 @@ le dé un sábado de 5 h:
   la hora valía jornal ÷ la jornada del día. Ahora un día de menos de 8 h paga
   en proporción, y la extra de un día de jornada corta empieza a las 8 h.
 
+### 3.2 Varios turnos en un día y turnos que cruzan la medianoche
+
+José preguntó: «¿Pueden haber varios turnos en un solo día y turnos que
+comienzan en un día y terminan en otro?». El paquete trabaja por **día de
+trabajo**, no por turno:
+
+- Un turno que cruza la medianoche es del día en que **empezó**. El adaptador
+  arma un `PayDay` con esa fecha (Pulso ya lo hace así: CB M14).
+- Varios turnos del mismo día se suman en un solo `PayDay`. Las 8 h y la extra
+  se cuentan contra el día entero: 07–11 y 14–19 son 9 h, o sea 8 h normales y
+  1 h al +25 %.
+- Con sueldo fijo pasa lo mismo: la app suma los turnos del día y cuenta la
+  extra contra la jornada del día, no contra cada turno.
+- Casos dorados con su `attendance` (los turnos tal como pasaron), para que
+  cada app pruebe su adaptador desde los turnos: `jornal-turno-cruza-medianoche`,
+  `jornal-dos-turnos-un-dia` y `mensual-sabado-dos-turnos`.
+
 ## 4. Sueldo fijo: adelanto semanal y cierre del periodo (decisión de José)
 
 A los mensuales se les paga **cada semana**. Un periodo completo paga
@@ -194,6 +211,11 @@ las semanas ya pagadas, y `closeFixedPeriod` devuelve el saldo
 1. ~~El jornalero en un día de jornada corta~~: **decidido el 23/10/2026**,
    8 h todos los días (§3.1). Está fijado en los casos dorados
    `jornal-sabado-8h`, `jornal-sabado-5h` y `jornal-sabado-9h`.
+1-bis. **El turno de noche completo con menos de 8 h efectivas, PENDIENTE**:
+   de 22:00 a 06:00 con 45 min de refrigerio son 7 h 15 min. Con la regla de
+   §3.1 cobra en proporción (S/ 72,50 de S/ 80). José decide si un turno de
+   noche cumplido cobra el jornal completo. Ningún caso lo fija todavía, y
+   v0.1.0 no se publica hasta esa respuesta.
 2. **Pulso no paga hoy el descanso semanal**: su pago estimado equivale a
    `ninguno`. Cuando Configuración tenga la opción, cada empresa nueva arranca
    con `semana_completa`. ¿Las que ya usan Pulso también? Su estimado subiría
@@ -204,7 +226,7 @@ las semanas ya pagadas, y `closeFixedPeriod` devuelve el saldo
 
 ## 9. Tests
 
-`src/salary.test.ts`, `payDays.test.ts`, `fixedClose.test.ts` y `casos.test.ts` (los 19 casos dorados):
+`src/salary.test.ts`, `payDays.test.ts`, `fixedClose.test.ts` y `casos.test.ts` (los 22 casos dorados):
 
 - Mensual de S/ 3 000 con mes completo en enero (31), febrero (28), febrero
   bisiesto (2028, 29) y abril (30): cada mes cierra en S/ 3 000,00. Adelantos

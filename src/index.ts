@@ -29,5 +29,5 @@ export {
   type SalaryKind,
   type SettlementPeriod,
 } from './salary';
-export type { GoldenCase, GoldenCases, GoldenCloseCase, GoldenPayCase } from './casos';
+export type { GoldenAttendance, GoldenCase, GoldenCases, GoldenCloseCase, GoldenPayCase, GoldenShift } from './casos';
 export { PLANILLA_VERSION } from './version';
