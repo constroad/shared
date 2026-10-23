@@ -20,7 +20,6 @@ export {
   STANDARD_DAY_MIN,
   dailyRateOf,
   datesOf,
-  hourDivisorMin,
   isFixedSalary,
   salaryInForce,
   settlementPeriodOf,

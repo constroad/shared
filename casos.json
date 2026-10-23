@@ -1,5 +1,6 @@
 {
  "version": 1,
+ "pending": [],
  "description": "Casos dorados de la planilla: cada app los corre por SU adaptador y debe dar estos céntimos.",
  "cases": [
   {
@@ -162,7 +163,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -173,7 +173,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -184,7 +183,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -195,7 +193,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -206,7 +203,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -217,7 +213,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -228,7 +223,6 @@
       "worked": false,
       "excused": false,
       "regularMin": 0,
-      "jornadaMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -270,7 +264,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -281,7 +274,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -292,7 +284,6 @@
       "worked": false,
       "excused": false,
       "regularMin": 0,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -303,7 +294,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -314,7 +304,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -325,7 +314,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -336,7 +324,6 @@
       "worked": false,
       "excused": false,
       "regularMin": 0,
-      "jornadaMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -378,7 +365,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 120,
       "overtime35Min": 60,
       "restDayMin": 0
@@ -425,7 +411,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -436,7 +421,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -447,7 +431,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -458,7 +441,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -469,7 +451,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -480,7 +461,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -491,7 +471,6 @@
       "worked": false,
       "excused": false,
       "regularMin": 0,
-      "jornadaMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -533,7 +512,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -544,7 +522,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -555,7 +532,6 @@
       "worked": false,
       "excused": false,
       "regularMin": 0,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -566,7 +542,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -577,7 +552,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -588,7 +562,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -599,7 +572,6 @@
       "worked": false,
       "excused": false,
       "regularMin": 0,
-      "jornadaMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -636,7 +608,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -647,7 +618,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -658,7 +628,6 @@
       "worked": false,
       "excused": false,
       "regularMin": 0,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -669,7 +638,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -680,7 +648,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -691,7 +658,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -702,7 +668,6 @@
       "worked": false,
       "excused": false,
       "regularMin": 0,
-      "jornadaMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -747,7 +712,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -758,7 +722,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -769,7 +732,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -780,7 +742,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -791,7 +752,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -802,7 +762,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -813,7 +772,6 @@
       "worked": false,
       "excused": false,
       "regularMin": 0,
-      "jornadaMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -853,7 +811,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 60,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -864,7 +821,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -875,7 +831,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -886,7 +841,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -897,7 +851,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -908,7 +861,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 480,
-      "jornadaMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -919,7 +871,6 @@
       "worked": false,
       "excused": false,
       "regularMin": 0,
-      "jornadaMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 0
@@ -955,6 +906,119 @@
    }
   },
   {
+   "id": "jornal-sabado-8h",
+   "description": "Jornal de S/ 80, sábado de 8 h (la app manda 5 h + 3 h de extra): jornal completo, sin extra",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-10-24",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 300,
+      "overtime25Min": 120,
+      "overtime35Min": 60,
+      "restDayMin": 0
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "daily",
+      "amount": 80,
+      "from": "2026-01-01"
+     }
+    ]
+   },
+   "expected": {
+    "totalCentimos": 8000,
+    "lines": [
+     {
+      "concept": "dias",
+      "centimos": 8000,
+      "period": null
+     }
+    ]
+   }
+  },
+  {
+   "id": "jornal-sabado-5h",
+   "description": "Jornal de S/ 80, sábado de 5 h: 5/8 del jornal",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-10-24",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 300,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "daily",
+      "amount": 80,
+      "from": "2026-01-01"
+     }
+    ]
+   },
+   "expected": {
+    "totalCentimos": 5000,
+    "lines": [
+     {
+      "concept": "dias",
+      "centimos": 5000,
+      "period": null
+     }
+    ]
+   }
+  },
+  {
+   "id": "jornal-sabado-9h",
+   "description": "Jornal de S/ 80, sábado de 9 h: jornal y 1 h al 25 % sobre jornal ÷ 8",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-10-24",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 300,
+      "overtime25Min": 120,
+      "overtime35Min": 120,
+      "restDayMin": 0
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "daily",
+      "amount": 80,
+      "from": "2026-01-01"
+     }
+    ]
+   },
+   "expected": {
+    "totalCentimos": 9250,
+    "lines": [
+     {
+      "concept": "dias",
+      "centimos": 8000,
+      "period": null
+     },
+     {
+      "concept": "extra_25",
+      "centimos": 1250,
+      "period": null
+     }
+    ]
+   }
+  },
+  {
    "id": "descanso-trabajado",
    "description": "Jornal de S/ 80, 4 h en su domingo: valor hora × horas, sin recargo",
    "fn": "payDays",
@@ -966,7 +1030,6 @@
       "worked": true,
       "excused": false,
       "regularMin": 0,
-      "jornadaMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
       "restDayMin": 240
@@ -991,8 +1054,5 @@
     ]
    }
   }
- ],
- "pending": [
-  "SPEC.md §8.1: el jornalero en un día de jornada corta (jornal completo o por horas). Ningún caso lo fija todavía: todos los días laborables tienen 8 h."
  ]
 }

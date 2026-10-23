@@ -28,7 +28,7 @@ export interface CentsFraction {
   denominator: number;
 }
 
-/** The standard jornada: the hour divisor of every kind but the daily wage. */
+/** The jornada every kind pays against: the hour value is the daily rate ÷ 8 h (José, 23/10/2026). */
 export const STANDARD_DAY_MIN = 8 * 60;
 const HOURS_PER_DAY = STANDARD_DAY_MIN / 60;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -47,9 +47,6 @@ export const dailyRateOf = (salary: Salary): CentsFraction => {
   if (isFixedSalary(salary.kind)) return { numerator: cents, denominator: BASE_DAYS[salary.kind] };
   return { numerator: salary.kind === 'hourly' ? cents * HOURS_PER_DAY : cents, denominator: 1 };
 };
-
-/** Minutes the daily rate is divided by for the hour value: 8 h, except a daily wage, over the day’s jornada. */
-export const hourDivisorMin = (salary: Salary, jornadaMin: number): number => (salary.kind === 'daily' && jornadaMin > 0 ? jornadaMin : STANDARD_DAY_MIN);
 
 /** The period a fixed salary settles: its month, its half-month (1–15, 16–end) or its week (Monday–Sunday). */
 export interface SettlementPeriod {

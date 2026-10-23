@@ -11,7 +11,7 @@ import type { Salary } from './salary';
 const SUNDAY = 0;
 const day = (date: string, over: Partial<PayDay> = {}): PayDay => {
   const scheduled = dateWeekday(date) !== SUNDAY;
-  return { date, scheduled, worked: scheduled, excused: false, regularMin: scheduled ? 480 : 0, jornadaMin: scheduled ? 480 : 0, overtime25Min: 0, overtime35Min: 0, restDayMin: 0, ...over };
+  return { date, scheduled, worked: scheduled, excused: false, regularMin: scheduled ? 480 : 0, overtime25Min: 0, overtime35Min: 0, restDayMin: 0, ...over };
 };
 /** Monday to Sunday; `over` by the offset from Monday. */
 const week = (monday: string, over: Record<number, Partial<PayDay>> = {}): PayDay[] => Array.from({ length: 7 }, (_, offset) => day(addDaysIso(monday, offset), over[offset]));
@@ -48,9 +48,34 @@ describe('daily wage: the days worked plus the weekly rest, by policy', () => {
     expect(lineOf(payDays({ days: week(MONDAY).slice(0, 6), salaries: JORNAL }).lines, 'descanso_semanal')).toBeUndefined();
   });
 
-  it('overtime by the day’s jornada: ÷ 6 h on a 6-hour day', () => {
-    const result = payDays({ days: [day(MONDAY, { jornadaMin: 360, overtime25Min: 60 })], salaries: JORNAL });
-    expect(lineOf(result.lines, 'extra_25')).toMatchObject({ minutes: 60, centimos: 1667 });
+  describe('8 h every day, Saturday too (José, 23/10/2026), whatever the app’s own jornada', () => {
+    const SATURDAY = '2026-10-24';
+    // The app’s schedule gives Saturday 5 h: what it sends as overtime past 5 h is re-split at 8 h.
+    it('8 h on Saturday: a full jornal, no overtime', () => {
+      const result = payDays({ days: [day(SATURDAY, { regularMin: 300, overtime25Min: 120, overtime35Min: 60 })], salaries: JORNAL });
+      expect(result.lines).toEqual([{ concept: 'dias', quantity: 1, minutes: null, centimos: 8000, period: null, note: null }]);
+    });
+
+    it('5 h: in proportion, 5/8 of the jornal', () => {
+      expect(payDays({ days: [day(SATURDAY, { regularMin: 300 })], salaries: JORNAL }).totalCentimos).toBe(5000);
+    });
+
+    it('9 h: the jornal and 1 h at +25 % over jornal ÷ 8', () => {
+      const result = payDays({ days: [day(SATURDAY, { regularMin: 300, overtime25Min: 120, overtime35Min: 120 })], salaries: JORNAL });
+      expect(lineOf(result.lines, 'dias')?.centimos).toBe(8000);
+      expect(lineOf(result.lines, 'extra_25')).toMatchObject({ minutes: 60, centimos: 1250 });
+      expect(lineOf(result.lines, 'extra_35')).toBeUndefined();
+    });
+
+    it('11 h: 2 h at +25 % and 1 h at +35 %', () => {
+      const result = payDays({ days: [day(MONDAY, { regularMin: 480, overtime25Min: 120, overtime35Min: 60 })], salaries: JORNAL });
+      expect(lineOf(result.lines, 'extra_25')).toMatchObject({ minutes: 120, centimos: 2500 });
+      expect(lineOf(result.lines, 'extra_35')).toMatchObject({ minutes: 60, centimos: 1350 });
+    });
+
+    it('a rejected overtime comes as 0 and is not paid', () => {
+      expect(payDays({ days: [day(MONDAY, { regularMin: 480 })], salaries: JORNAL }).totalCentimos).toBe(8000);
+    });
   });
 });
 
@@ -70,8 +95,8 @@ describe('monthly: the weekly advance by calendar day, overtime over jornal ÷ 8
     expect(lineOf(result.lines, 'descanso_semanal')).toBeUndefined();
   });
 
-  it('overtime: jornal (3 000 ÷ 30) ÷ 8 × 1.25 and × 1.35, even on a 6-hour day', () => {
-    const result = payDays({ days: [day('2026-02-10', { jornadaMin: 360, overtime25Min: 120, overtime35Min: 60 })], salaries: MONTHLY });
+  it('overtime as it comes in the day: jornal (3 000 ÷ 30) ÷ 8 × 1.25 and × 1.35', () => {
+    const result = payDays({ days: [day('2026-02-10', { overtime25Min: 120, overtime35Min: 60 })], salaries: MONTHLY });
     expect(lineOf(result.lines, 'extra_25')).toMatchObject({ minutes: 120, centimos: 3125 });
     expect(lineOf(result.lines, 'extra_35')).toMatchObject({ minutes: 60, centimos: 1688 });
   });
@@ -89,7 +114,7 @@ describe('by the hour', () => {
 });
 
 describe('rest day worked and edges', () => {
-  it('hour value × hours, without surcharge by default (note «recargo por verificar»); the company can set one', () => {
+  it('hour value (jornal ÷ 8) × hours, without surcharge by default (note «recargo por verificar»); the company can set one', () => {
     const sunday = [day('2026-10-25', { worked: true, restDayMin: 240 })];
     expect(lineOf(payDays({ days: sunday, salaries: JORNAL }).lines, 'descanso_trabajado')).toMatchObject({ minutes: 240, centimos: 4000, note: 'recargo por verificar' });
     expect(lineOf(payDays({ days: sunday, salaries: JORNAL, policy: { restDayWorkedPercent: 200 } }).lines, 'descanso_trabajado')).toMatchObject({ centimos: 8000, note: null });

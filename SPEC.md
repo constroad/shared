@@ -18,8 +18,9 @@
 - Extra presunta salvo rechazo. El rechazo llega como 0 minutos pagados.
 - Extra al +25 % las dos primeras horas del día y al +35 % el resto
   (`splitOvertime`).
-- La jornada sale del horario: turno partido, nocturno, atípico. El refrigerio
-  es de 45 min si el turno pasa de 6 h.
+- Las horas trabajadas las cuenta cada app (en Pulso, con su horario: turno
+  partido, nocturno, atípico, y el refrigerio de 45 min si el turno pasa de
+  6 h). El paquete recibe los minutos ya contados.
 - Historial de sueldo por fecha. Cada día se paga con el sueldo vigente ESE día
   (P1).
 - Una salida olvidada cuenta hasta la última marca.
@@ -31,8 +32,8 @@
 
 | Tipo | `kind` | Jornal | Base del pago |
 | --- | --- | --- | --- |
-| Jornal diario | `daily` | el monto | días laborables trabajados |
-| Por hora | `hourly` | monto × 8 | minutos dentro de la jornada × monto ÷ 60 |
+| Jornal diario | `daily` | el monto | 8 h por día laborable (§3.1) |
+| Por hora | `hourly` | monto × 8 | 8 h por día laborable × monto ÷ 60 (§3.1) |
 | Semanal | `weekly` | monto ÷ 7 | sueldo fijo (§4) |
 | Quincenal | `biweekly` | monto ÷ 15 | sueldo fijo (§4) |
 | Mensual | `monthly` | monto ÷ 30 | sueldo fijo (§4) |
@@ -44,10 +45,25 @@ va en soles; la salida, en céntimos.
 - Sueldo fijo: jornal ÷ 8 (decisión de José). Un mensual de S/ 3 000 tiene un
   jornal de S/ 100 y un valor hora de S/ 12,50: la extra vale S/ 15,625 al
   +25 % y S/ 16,875 al +35 %.
-- Por hora: el monto.
-- Jornal diario: jornal ÷ la jornada del día, 8 h si el día no tiene jornada.
-  Es lo que Pulso ya hacía, y con una jornada de 8 h da lo mismo que ÷ 8.
-  **Pendiente de José (§8.1).**
+- Por día o por hora: jornal ÷ 8, siempre.
+
+### 3.1 Por día o por hora: 8 h todos los días, sábado incluido (José, 23/10/2026)
+
+«Si se paga diario, ¿no debería ser su sábado las 8 h?». A quien se le paga
+por día o por hora, cada día laborable es de 8 h, aunque el horario de la app
+le dé un sábado de 5 h:
+
+- Minutos pagados del día = `regularMin` + la extra pagada que manda la app
+  (la rechazada llega en 0).
+- Hasta 8 h: jornal × minutos ÷ 480. Un sábado de 5 h paga 5/8 del jornal.
+- Pasadas las 8 h: extra, 2 h al +25 % y el resto al +35 %, sobre jornal ÷ 8.
+- Ejemplos con jornal de S/ 80: sábado de 8 h → S/ 80; de 5 h → S/ 50; de
+  9 h → S/ 80 + 1 h al 25 % (S/ 12,50).
+- No cambia el pago semanal del sueldo fijo: su sábado corto lo cubre el
+  sueldo, y su extra llega como la cuenta la app.
+- **Cambio para Pulso**: antes, un día trabajado pagaba el jornal completo y
+  la hora valía jornal ÷ la jornada del día. Ahora un día de menos de 8 h paga
+  en proporción, y la extra de un día de jornada corta empieza a las 8 h.
 
 ## 4. Sueldo fijo: adelanto semanal y cierre del periodo (decisión de José)
 
@@ -120,8 +136,7 @@ interface PayDay {
   scheduled: boolean;    // laborable según el horario
   worked: boolean;       // trabajó ese día
   excused: boolean;      // permiso pagado o feriado: no es falta y cuenta para el descanso
-  regularMin: number;    // minutos dentro de la jornada (pago por hora)
-  jornadaMin: number;    // jornada del día; 0 = no laborable
+  regularMin: number;    // minutos trabajados dentro de la jornada de la app
   overtime25Min: number; // extra PAGADA (la rechazada va en 0)
   overtime35Min: number;
   restDayMin: number;    // trabajado en su día de descanso
@@ -176,13 +191,9 @@ las semanas ya pagadas, y `closeFixedPeriod` devuelve el saldo
 
 ## 8. Preguntas abiertas para José
 
-1. **El jornalero en un día de jornada corta (el sábado de 5 h), PENDIENTE**:
-   hoy el paquete hace lo de Pulso. El día trabajado paga el jornal completo, y
-   la hora (base de la extra) vale jornal ÷ la jornada del día. Portal e
-   Inframaq pagan ese día por horas (jornal ÷ 8 × horas). José decide cuál
-   queda. Hasta entonces, **los casos dorados no fijan esto**: todos sus días
-   laborables tienen 8 h, así que dan lo mismo con cualquiera de las dos
-   reglas. El caso de la jornada corta entra a `casos.json` con la decisión.
+1. ~~El jornalero en un día de jornada corta~~: **decidido el 23/10/2026**,
+   8 h todos los días (§3.1). Está fijado en los casos dorados
+   `jornal-sabado-8h`, `jornal-sabado-5h` y `jornal-sabado-9h`.
 2. **Pulso no paga hoy el descanso semanal**: su pago estimado equivale a
    `ninguno`. Cuando Configuración tenga la opción, cada empresa nueva arranca
    con `semana_completa`. ¿Las que ya usan Pulso también? Su estimado subiría
@@ -193,7 +204,7 @@ las semanas ya pagadas, y `closeFixedPeriod` devuelve el saldo
 
 ## 9. Tests
 
-`src/salary.test.ts`, `payDays.test.ts`, `fixedClose.test.ts` y `casos.test.ts` (los 16 casos dorados):
+`src/salary.test.ts`, `payDays.test.ts`, `fixedClose.test.ts` y `casos.test.ts` (los 19 casos dorados):
 
 - Mensual de S/ 3 000 con mes completo en enero (31), febrero (28), febrero
   bisiesto (2028, 29) y abril (30): cada mes cierra en S/ 3 000,00. Adelantos
@@ -204,4 +215,5 @@ las semanas ya pagadas, y `closeFixedPeriod` devuelve el saldo
 - Quincena de 16 días (del 16 al 31): exactamente la quincena.
 - Jornalero: los días trabajados más el descanso según las tres opciones, con
   semana completa y con una falta.
+- Jornalero en sábado: 8 h → S/ 80, 5 h → S/ 50, 9 h → S/ 80 + S/ 12,50.
 - Extras de un mensual: jornal ÷ 8 × 1,25 y × 1,35.

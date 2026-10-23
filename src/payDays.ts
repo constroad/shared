@@ -1,18 +1,20 @@
 import { addExact, roundExact, toCentimos, type ExactSum } from './exactCents';
-import { BASE_DAYS, dailyRateOf, hourDivisorMin, isFixedSalary, salaryInForce, settlementPeriodOf, type CentsFraction, type Salary } from './salary';
+import { BASE_DAYS, STANDARD_DAY_MIN, dailyRateOf, isFixedSalary, salaryInForce, settlementPeriodOf, type CentsFraction, type FixedSalaryKind, type Salary } from './salary';
 
 /**
  * The CANONICAL pay of a range of days (SPEC.md). PURE, in whole cents.
  * Pulso, Portal and Inframaq pass their days as `PayDay`; how the hours were
  * counted is each app’s adapter.
  *
- * - Base: daily wage = laborable days worked; by the hour = minutes inside the
- *   jornada; fixed salary = each calendar day at salary ÷ the days of ITS
- *   period, minus absences at the treintavo (§4).
+ * - Base: by the day or by the hour, 8 h every laborable day, Saturday too
+ *   (José): less is paid in proportion, more is overtime. Fixed salary = each
+ *   calendar day at salary ÷ the days of ITS period, minus absences at the
+ *   treintavo (§4); its overtime comes in the `PayDay`.
  * - Weekly rest (daily and hourly only, closed week of 7 days): the company’s
  *   policy (§5). A fixed salary already pays it.
- * - Overtime: hour value × 1.25 / 1.35. Rest day worked: × the company’s
- *   surcharge, 100 % by default («recargo por verificar», §6).
+ * - Overtime: hour value (daily rate ÷ 8) × 1.25 the first 2 h of the day,
+ *   × 1.35 the rest. Rest day worked: × the company’s surcharge, 100 % by
+ *   default («recargo por verificar», §6).
  */
 
 export const WEEKLY_REST_POLICIES = ['semana_completa', 'proporcional', 'ninguno'] as const;
@@ -33,11 +35,13 @@ export interface PayDay {
   worked: boolean;
   /** Paid leave or holiday: not an absence, and it counts for the weekly rest. */
   excused: boolean;
-  /** Minutes inside the jornada (pay by the hour). */
+  /** Worked minutes inside the app’s own jornada. */
   regularMin: number;
-  /** The day’s jornada; 0 = not laborable. */
-  jornadaMin: number;
-  /** PAID overtime (a rejected one comes as 0). */
+  /**
+   * PAID overtime over the app’s jornada (a rejected one comes as 0). A fixed
+   * salary pays it as it comes; by the day or by the hour, regular + overtime
+   * are re-split at 8 h.
+   */
   overtime25Min: number;
   overtime35Min: number;
   /** Worked on the rest day. */
@@ -73,6 +77,8 @@ export const REST_DAY_NOTE = 'recargo por verificar';
 
 const PERCENT = 100;
 const OVERTIME_PERCENT = { extra_25: 125, extra_35: 135 } as const;
+/** The first two hours of overtime of a day go at +25 %. */
+const FIRST_OVERTIME_TIER_MIN = 120;
 const WEEK_DAYS = 7;
 const SHARE_DECIMALS = 10_000;
 
@@ -96,30 +102,41 @@ const entry = (map: Map<string, Counted>, key: string): Counted => map.get(key) 
 
 const isAbsence = (day: PayDay): boolean => day.scheduled && !day.worked && !day.excused;
 
-/** Minutes at a percent of the hour value: rate × percent × minutes ÷ (divisor × 100). */
-const addMinutes = (target: Counted, minutes: number, rate: CentsFraction, percent: number, divisorMin: number): void => {
+/** Minutes at a percent of the hour value: daily rate × percent × minutes ÷ (8 h × 100). */
+const addMinutes = (target: Counted, minutes: number, rate: CentsFraction, percent: number): void => {
   if (minutes <= 0) return;
   target.units += minutes;
-  addExact(target.sum, rate.numerator * percent * minutes, rate.denominator * divisorMin * PERCENT);
+  addExact(target.sum, rate.numerator * percent * minutes, rate.denominator * STANDARD_DAY_MIN * PERCENT);
 };
 
-const addBase = (totals: Totals, day: PayDay, salary: Salary, rate: CentsFraction): void => {
-  if (isFixedSalary(salary.kind)) {
-    const period = settlementPeriodOf(salary.kind, day.date);
-    const cents = toCentimos(salary.amount);
-    const paid = entry(totals.salary, period.key);
-    paid.units += 1;
-    addExact(paid.sum, cents, period.days);
-    if (!isAbsence(day)) return;
-    const missing = entry(totals.absences, period.key);
-    missing.units += 1;
-    addExact(missing.sum, cents, BASE_DAYS[salary.kind]);
-  } else if (salary.kind === 'hourly') {
-    if (day.scheduled) addMinutes(totals.hours, day.regularMin, rate, PERCENT, hourDivisorMin(salary, day.jornadaMin));
-  } else if (day.scheduled && day.worked) {
+/** Each calendar day at salary ÷ the days of its period; an absence, minus salary ÷ the base days. Overtime as it comes. */
+const addFixedDay = (totals: Totals, day: PayDay, kind: FixedSalaryKind, cents: number, rate: CentsFraction): void => {
+  const period = settlementPeriodOf(kind, day.date);
+  const paid = entry(totals.salary, period.key);
+  paid.units += 1;
+  addExact(paid.sum, cents, period.days);
+  addMinutes(totals.extra_25, day.overtime25Min, rate, OVERTIME_PERCENT.extra_25);
+  addMinutes(totals.extra_35, day.overtime35Min, rate, OVERTIME_PERCENT.extra_35);
+  if (!isAbsence(day)) return;
+  const missing = entry(totals.absences, period.key);
+  missing.units += 1;
+  addExact(missing.sum, cents, BASE_DAYS[kind]);
+};
+
+/** By the day or by the hour: 8 h every laborable day; less in proportion, more as overtime (2 h at +25 %, then +35 %). */
+const addDayByHours = (totals: Totals, day: PayDay, salary: Salary, rate: CentsFraction): void => {
+  if (!day.scheduled) return;
+  const paidMin = day.regularMin + day.overtime25Min + day.overtime35Min;
+  const baseMin = Math.min(paidMin, STANDARD_DAY_MIN);
+  const overtimeMin = paidMin - baseMin;
+  if (salary.kind === 'hourly') {
+    addMinutes(totals.hours, baseMin, rate, PERCENT);
+  } else if (day.worked) {
     totals.days.units += 1;
-    addExact(totals.days.sum, rate.numerator, rate.denominator);
+    addExact(totals.days.sum, rate.numerator * baseMin, rate.denominator * STANDARD_DAY_MIN);
   }
+  addMinutes(totals.extra_25, Math.min(overtimeMin, FIRST_OVERTIME_TIER_MIN), rate, OVERTIME_PERCENT.extra_25);
+  addMinutes(totals.extra_35, Math.max(0, overtimeMin - FIRST_OVERTIME_TIER_MIN), rate, OVERTIME_PERCENT.extra_35);
 };
 
 const accumulate = (days: readonly PayDay[], salaries: readonly Salary[], policy: PayPolicy): Totals => {
@@ -128,11 +145,9 @@ const accumulate = (days: readonly PayDay[], salaries: readonly Salary[], policy
     const salary = salaryInForce(salaries, day.date);
     if (!salary) continue;
     const rate = dailyRateOf(salary);
-    const divisorMin = hourDivisorMin(salary, day.jornadaMin);
-    addBase(totals, day, salary, rate);
-    addMinutes(totals.extra_25, day.overtime25Min, rate, OVERTIME_PERCENT.extra_25, divisorMin);
-    addMinutes(totals.extra_35, day.overtime35Min, rate, OVERTIME_PERCENT.extra_35, divisorMin);
-    addMinutes(totals.descanso_trabajado, day.restDayMin, rate, policy.restDayWorkedPercent, divisorMin);
+    if (isFixedSalary(salary.kind)) addFixedDay(totals, day, salary.kind, toCentimos(salary.amount), rate);
+    else addDayByHours(totals, day, salary, rate);
+    addMinutes(totals.descanso_trabajado, day.restDayMin, rate, policy.restDayWorkedPercent);
   }
   return totals;
 };

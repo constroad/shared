@@ -17,7 +17,7 @@ const SUNDAY = 0;
 const workDay = (date: string, absences: readonly string[]): PayDay => {
   const scheduled = dateWeekday(date) !== SUNDAY;
   const worked = scheduled && !absences.includes(date);
-  return { date, scheduled, worked, excused: false, regularMin: worked ? 480 : 0, jornadaMin: scheduled ? 480 : 0, overtime25Min: 0, overtime35Min: 0, restDayMin: 0 };
+  return { date, scheduled, worked, excused: false, regularMin: worked ? 480 : 0, overtime25Min: 0, overtime35Min: 0, restDayMin: 0 };
 };
 
 /** What the weekly payments of the weeks touching the month advanced for THAT month. */

@@ -1,4 +1,4 @@
-import { dailyRateOf, datesOf, hourDivisorMin, isFixedSalary, salaryInForce, settlementPeriodOf, type Salary } from './salary';
+import { dailyRateOf, datesOf, isFixedSalary, salaryInForce, settlementPeriodOf, type Salary } from './salary';
 
 /**
  * Salary kinds (SPEC.md §3–4): the history by date, the daily
@@ -21,7 +21,7 @@ describe('salaryInForce', () => {
   });
 });
 
-describe('daily rate and hour divisor', () => {
+describe('daily rate', () => {
   it('fixed salaries by the treintavo: month ÷ 30, half-month ÷ 15, week ÷ 7', () => {
     expect(dailyRateOf(monthly(3000))).toEqual({ numerator: 300000, denominator: 30 });
     expect(dailyRateOf({ kind: 'biweekly', amount: 1500, from: '2026-01-01' })).toEqual({ numerator: 150000, denominator: 15 });
@@ -31,13 +31,6 @@ describe('daily rate and hour divisor', () => {
   it('a daily wage is itself; by the hour, 8 hours', () => {
     expect(dailyRateOf({ kind: 'daily', amount: 80, from: '2026-01-01' })).toEqual({ numerator: 8000, denominator: 1 });
     expect(dailyRateOf({ kind: 'hourly', amount: 12.5, from: '2026-01-01' })).toEqual({ numerator: 10000, denominator: 1 });
-  });
-
-  it('the hour value: fixed and hourly ÷ 8 h; the daily wage ÷ the day’s jornada (8 h without one)', () => {
-    expect(hourDivisorMin(monthly(3000), 360)).toBe(480);
-    expect(hourDivisorMin({ kind: 'hourly', amount: 12.5, from: '2026-01-01' }, 360)).toBe(480);
-    expect(hourDivisorMin({ kind: 'daily', amount: 80, from: '2026-01-01' }, 360)).toBe(360);
-    expect(hourDivisorMin({ kind: 'daily', amount: 80, from: '2026-01-01' }, 0)).toBe(480);
   });
 
   it('only weekly, biweekly and monthly are fixed', () => {
