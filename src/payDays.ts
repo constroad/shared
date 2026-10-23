@@ -7,7 +7,8 @@ import { BASE_DAYS, STANDARD_DAY_MIN, dailyRateOf, isFixedSalary, salaryInForce,
  * counted is each app’s adapter.
  *
  * - Base: by the day or by the hour, 8 h every laborable day, Saturday too
- *   (José): less is paid in proportion, more is overtime. Fixed salary = each
+ *   (José): less is paid in proportion, more is overtime. A completed night
+ *   shift pays the full jornal (§3.3). Fixed salary = each
  *   calendar day at salary ÷ the days of ITS period, minus absences at the
  *   treintavo (§4); its overtime comes in the `PayDay`.
  * - Weekly rest (daily and hourly only, closed week of 7 days): the company’s
@@ -46,6 +47,12 @@ export interface PayDay {
   overtime35Min: number;
   /** Worked on the rest day. */
   restDayMin: number;
+  /**
+   * Worked its WHOLE scheduled night shift (José, 23/10/2026): a daily wage
+   * pays the full jornal even under 8 effective hours. Only night shifts: a
+   * short day shift (Saturday) still pays in proportion.
+   */
+  completedNightShift: boolean;
 }
 
 export const PAY_LINE_CONCEPTS = ['dias', 'horas', 'sueldo', 'faltas', 'descanso_semanal', 'extra_25', 'extra_35', 'descanso_trabajado'] as const;
@@ -132,8 +139,10 @@ const addDayByHours = (totals: Totals, day: PayDay, salary: Salary, rate: CentsF
   if (salary.kind === 'hourly') {
     addMinutes(totals.hours, baseMin, rate, PERCENT);
   } else if (day.worked) {
+    // By the day, a completed night shift is a full jornal; by the hour, it pays its hours.
+    const dayMin = day.completedNightShift ? STANDARD_DAY_MIN : baseMin;
     totals.days.units += 1;
-    addExact(totals.days.sum, rate.numerator * baseMin, rate.denominator * STANDARD_DAY_MIN);
+    addExact(totals.days.sum, rate.numerator * dayMin, rate.denominator * STANDARD_DAY_MIN);
   }
   addMinutes(totals.extra_25, Math.min(overtimeMin, FIRST_OVERTIME_TIER_MIN), rate, OVERTIME_PERCENT.extra_25);
   addMinutes(totals.extra_35, Math.max(0, overtimeMin - FIRST_OVERTIME_TIER_MIN), rate, OVERTIME_PERCENT.extra_35);

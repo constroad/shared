@@ -1,8 +1,6 @@
 {
  "version": 1,
- "pending": [
-  "SPEC.md §8.1-bis: el turno de noche completo con menos de 8 h efectivas (de 22:00 a 06:00 con 45 min de refrigerio, 7 h 15 min): jornal completo o en proporción. José decide; ningún caso lo fija todavía."
- ],
+ "pending": [],
  "description": "Casos dorados de la planilla: cada app los corre por SU adaptador y debe dar estos céntimos.",
  "cases": [
   {
@@ -167,7 +165,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-01-27",
@@ -177,7 +176,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-01-28",
@@ -187,7 +187,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-01-29",
@@ -197,7 +198,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-01-30",
@@ -207,7 +209,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-01-31",
@@ -217,7 +220,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-02-01",
@@ -227,7 +231,8 @@
       "regularMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -268,7 +273,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-02-10",
@@ -278,7 +284,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-02-11",
@@ -288,7 +295,8 @@
       "regularMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-02-12",
@@ -298,7 +306,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-02-13",
@@ -308,7 +317,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-02-14",
@@ -318,7 +328,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-02-15",
@@ -328,7 +339,8 @@
       "regularMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -369,7 +381,8 @@
       "regularMin": 480,
       "overtime25Min": 120,
       "overtime35Min": 60,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -415,7 +428,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-20",
@@ -425,7 +439,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-21",
@@ -435,7 +450,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-22",
@@ -445,7 +461,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-23",
@@ -455,7 +472,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-24",
@@ -465,7 +483,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-25",
@@ -475,7 +494,8 @@
       "regularMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -516,7 +536,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-20",
@@ -526,7 +547,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-21",
@@ -536,7 +558,8 @@
       "regularMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-22",
@@ -546,7 +569,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-23",
@@ -556,7 +580,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-24",
@@ -566,7 +591,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-25",
@@ -576,7 +602,8 @@
       "regularMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -612,7 +639,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-20",
@@ -622,7 +650,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-21",
@@ -632,7 +661,8 @@
       "regularMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-22",
@@ -642,7 +672,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-23",
@@ -652,7 +683,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-24",
@@ -662,7 +694,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-25",
@@ -672,7 +705,8 @@
       "regularMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -716,7 +750,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-20",
@@ -726,7 +761,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-21",
@@ -736,7 +772,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-22",
@@ -746,7 +783,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-23",
@@ -756,7 +794,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-24",
@@ -766,7 +805,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-25",
@@ -776,7 +816,8 @@
       "regularMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -815,7 +856,8 @@
       "regularMin": 480,
       "overtime25Min": 60,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-20",
@@ -825,7 +867,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-21",
@@ -835,7 +878,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-22",
@@ -845,7 +889,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-23",
@@ -855,7 +900,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-24",
@@ -865,7 +911,8 @@
       "regularMin": 480,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      },
      {
       "date": "2026-10-25",
@@ -875,7 +922,8 @@
       "regularMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -921,7 +969,8 @@
       "regularMin": 300,
       "overtime25Min": 120,
       "overtime35Min": 60,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -957,7 +1006,8 @@
       "regularMin": 300,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -993,7 +1043,8 @@
       "regularMin": 300,
       "overtime25Min": 120,
       "overtime35Min": 120,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -1034,7 +1085,8 @@
       "regularMin": 480,
       "overtime25Min": 15,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": true
      }
     ],
     "salaries": [
@@ -1077,6 +1129,110 @@
    }
   },
   {
+   "id": "jornal-turno-noche-cumplido",
+   "description": "Jornal de S/ 80, turno de noche de 22:00 a 06:00 con 45 min (7 h 15 min), cumplido: jornal completo (José)",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-10-21",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 435,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": true
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "daily",
+      "amount": 80,
+      "from": "2026-01-01"
+     }
+    ]
+   },
+   "expected": {
+    "totalCentimos": 8000,
+    "lines": [
+     {
+      "concept": "dias",
+      "centimos": 8000,
+      "period": null
+     }
+    ]
+   },
+   "attendance": {
+    "days": [
+     {
+      "date": "2026-10-21",
+      "jornadaMin": 435,
+      "shifts": [
+       {
+        "start": "2026-10-21T22:00",
+        "end": "2026-10-22T06:00",
+        "breakMin": 45
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "jornal-turno-noche-salio-antes",
+   "description": "Jornal de S/ 80, turno de noche de 22:00 que sale a las 05:00 (6 h 15 min): no lo cumplió, en proporción",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-10-21",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 375,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "daily",
+      "amount": 80,
+      "from": "2026-01-01"
+     }
+    ]
+   },
+   "expected": {
+    "totalCentimos": 6250,
+    "lines": [
+     {
+      "concept": "dias",
+      "centimos": 6250,
+      "period": null
+     }
+    ]
+   },
+   "attendance": {
+    "days": [
+     {
+      "date": "2026-10-21",
+      "jornadaMin": 435,
+      "shifts": [
+       {
+        "start": "2026-10-21T22:00",
+        "end": "2026-10-22T05:00",
+        "breakMin": 45
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
    "id": "jornal-dos-turnos-un-dia",
    "description": "Jornal de S/ 80, de 07:00 a 11:00 y de 14:00 a 19:00 (9 h): las 8 h son del día, no del turno; jornal y 1 h al 25 %",
    "fn": "payDays",
@@ -1090,7 +1246,8 @@
       "regularMin": 480,
       "overtime25Min": 60,
       "overtime35Min": 0,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -1151,7 +1308,8 @@
       "regularMin": 300,
       "overtime25Min": 120,
       "overtime35Min": 120,
-      "restDayMin": 0
+      "restDayMin": 0,
+      "completedNightShift": false
      }
     ],
     "salaries": [
@@ -1217,7 +1375,8 @@
       "regularMin": 0,
       "overtime25Min": 0,
       "overtime35Min": 0,
-      "restDayMin": 240
+      "restDayMin": 240,
+      "completedNightShift": false
      }
     ],
     "salaries": [

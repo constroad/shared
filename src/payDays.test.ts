@@ -11,7 +11,7 @@ import type { Salary } from './salary';
 const SUNDAY = 0;
 const day = (date: string, over: Partial<PayDay> = {}): PayDay => {
   const scheduled = dateWeekday(date) !== SUNDAY;
-  return { date, scheduled, worked: scheduled, excused: false, regularMin: scheduled ? 480 : 0, overtime25Min: 0, overtime35Min: 0, restDayMin: 0, ...over };
+  return { date, scheduled, worked: scheduled, excused: false, regularMin: scheduled ? 480 : 0, overtime25Min: 0, overtime35Min: 0, restDayMin: 0, completedNightShift: false, ...over };
 };
 /** Monday to Sunday; `over` by the offset from Monday. */
 const week = (monday: string, over: Record<number, Partial<PayDay>> = {}): PayDay[] => Array.from({ length: 7 }, (_, offset) => day(addDaysIso(monday, offset), over[offset]));
@@ -71,6 +71,20 @@ describe('daily wage: the days worked plus the weekly rest, by policy', () => {
       const result = payDays({ days: [day(MONDAY, { regularMin: 480, overtime25Min: 120, overtime35Min: 60 })], salaries: JORNAL });
       expect(lineOf(result.lines, 'extra_25')).toMatchObject({ minutes: 120, centimos: 2500 });
       expect(lineOf(result.lines, 'extra_35')).toMatchObject({ minutes: 60, centimos: 1350 });
+    });
+
+    it('a completed night shift of 7 h 15 min pays the full jornal (José, 23/10/2026); left early, in proportion', () => {
+      expect(payDays({ days: [day(MONDAY, { regularMin: 435, completedNightShift: true })], salaries: JORNAL }).totalCentimos).toBe(8000);
+      expect(payDays({ days: [day(MONDAY, { regularMin: 375 })], salaries: JORNAL }).totalCentimos).toBe(6250);
+    });
+
+    it('a completed night shift with more than 8 h still pays its overtime past 8 h', () => {
+      const result = payDays({ days: [day(MONDAY, { regularMin: 435, overtime25Min: 60, completedNightShift: true })], salaries: JORNAL });
+      expect(result.lines.map((line) => [line.concept, line.minutes, line.centimos])).toEqual([['dias', null, 8000], ['extra_25', 15, 313]]);
+    });
+
+    it('by the hour, a completed night shift pays its hours', () => {
+      expect(payDays({ days: [day(MONDAY, { regularMin: 435, completedNightShift: true })], salaries: [{ kind: 'hourly', amount: 10, from: '2026-01-01' }] }).totalCentimos).toBe(7250);
     });
 
     it('a rejected overtime comes as 0 and is not paid', () => {

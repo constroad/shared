@@ -25,6 +25,10 @@ describe('casos.json', () => {
         expect(day.shifts.every((shift) => shift.start.startsWith(day.date))).toBe(true);
         expect(payDay.regularMin + payDay.overtime25Min + payDay.overtime35Min).toBe(day.shifts.reduce((total, shift) => total + minutesOf(shift), 0));
         expect(payDay.regularMin).toBe(Math.min(day.jornadaMin, payDay.regularMin + payDay.overtime25Min + payDay.overtime35Min));
+        // A night shift starts between 22:00 and 06:00 or crosses midnight; complete = it worked its whole jornada.
+        const worked = day.shifts.reduce((total, shift) => total + minutesOf(shift), 0);
+        const night = day.shifts.some((shift) => !shift.end.startsWith(day.date) || shift.start.slice(11) >= '22:00' || shift.start.slice(11) < '06:00');
+        expect(payDay.completedNightShift).toBe(night && worked >= day.jornadaMin);
       }
     }
   });

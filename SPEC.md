@@ -82,6 +82,24 @@ trabajo**, no por turno:
   cada app pruebe su adaptador desde los turnos: `jornal-turno-cruza-medianoche`,
   `jornal-dos-turnos-un-dia` y `mensual-sabado-dos-turnos`.
 
+### 3.3 Turno de noche cumplido: jornal completo (José, 23/10/2026)
+
+«Turno de noche cumplido: jornal completo, aunque sean menos de 8 h
+efectivas». De 22:00 a 06:00 con 45 min de refrigerio son 7 h 15 min, y quien
+lo cumple cobra S/ 80, no S/ 72,50.
+
+- El adaptador marca `completedNightShift` cuando el día tiene un turno de
+  noche (empieza entre 22:00 y 06:00 o cruza la medianoche) y se trabajó toda
+  la jornada programada de ese día. En Pulso: `workedMin ≥ jornadaMin` con un
+  turno `nightShift`.
+- Solo cambia el jornal diario: el día vale un jornal entero, y la extra sigue
+  empezando a las 8 h. Por hora se pagan las horas trabajadas.
+- Si sale antes, no lo cumplió: paga en proporción (22:00 a 05:00 son 6 h 15
+  min, S/ 62,50).
+- Es solo para el turno de noche: un sábado de 5 h sigue pagando en proporción
+  (§3.1).
+- Casos dorados: `jornal-turno-noche-cumplido` y `jornal-turno-noche-salio-antes`.
+
 ## 4. Sueldo fijo: adelanto semanal y cierre del periodo (decisión de José)
 
 A los mensuales se les paga **cada semana**. Un periodo completo paga
@@ -157,6 +175,7 @@ interface PayDay {
   overtime25Min: number; // extra PAGADA (la rechazada va en 0)
   overtime35Min: number;
   restDayMin: number;    // trabajado en su día de descanso
+  completedNightShift: boolean; // cumplió su turno de noche programado (§3.3)
 }
 
 interface PayPolicy { weeklyRest: 'semana_completa' | 'proporcional' | 'ninguno'; restDayWorkedPercent: number }
@@ -211,11 +230,8 @@ las semanas ya pagadas, y `closeFixedPeriod` devuelve el saldo
 1. ~~El jornalero en un día de jornada corta~~: **decidido el 23/10/2026**,
    8 h todos los días (§3.1). Está fijado en los casos dorados
    `jornal-sabado-8h`, `jornal-sabado-5h` y `jornal-sabado-9h`.
-1-bis. **El turno de noche completo con menos de 8 h efectivas, PENDIENTE**:
-   de 22:00 a 06:00 con 45 min de refrigerio son 7 h 15 min. Con la regla de
-   §3.1 cobra en proporción (S/ 72,50 de S/ 80). José decide si un turno de
-   noche cumplido cobra el jornal completo. Ningún caso lo fija todavía, y
-   v0.1.0 no se publica hasta esa respuesta.
+1-bis. ~~El turno de noche cumplido con menos de 8 h efectivas~~:
+   **decidido el 23/10/2026**, jornal completo (§3.3).
 2. **Pulso no paga hoy el descanso semanal**: su pago estimado equivale a
    `ninguno`. Cuando Configuración tenga la opción, cada empresa nueva arranca
    con `semana_completa`. ¿Las que ya usan Pulso también? Su estimado subiría
@@ -226,7 +242,7 @@ las semanas ya pagadas, y `closeFixedPeriod` devuelve el saldo
 
 ## 9. Tests
 
-`src/salary.test.ts`, `payDays.test.ts`, `fixedClose.test.ts` y `casos.test.ts` (los 22 casos dorados):
+`src/salary.test.ts`, `payDays.test.ts`, `fixedClose.test.ts` y `casos.test.ts` (los 24 casos dorados):
 
 - Mensual de S/ 3 000 con mes completo en enero (31), febrero (28), febrero
   bisiesto (2028, 29) y abril (30): cada mes cierra en S/ 3 000,00. Adelantos
