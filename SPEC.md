@@ -152,6 +152,23 @@ ya es casi exacto y el cierre solo corrige céntimos o faltas.
   (`excused`) cuenta como trabajado para el descanso, y no es falta.
 - El jornal del descanso es el vigente el último día de la semana.
 
+## 5-bis. La semana en curso: `asOf` (hallazgo de Inframaq, 23/10/2026)
+
+Con la semana todavía corriendo, los días que no pasaron llegan sin trabajo y
+`payDays` los contaba como faltas: a un mensual le descontaba el resto de la
+semana. Se arregla en el paquete, no en cada adaptador:
+
+- `asOf` = hoy. Los días posteriores no cuentan para nada: ni sueldo, ni
+  extra, ni falta.
+- Hoy sin trabajo todavía no es falta: el día sigue corriendo.
+- El sueldo fijo se adelanta hasta hoy inclusive.
+- El descanso semanal se gana recién con la semana cerrada (`asOf` en el
+  último día o sin `asOf`).
+- Sin `asOf`, todos los días ya pasaron (lo de antes): sirve para una semana
+  cerrada.
+- Casos dorados: `mensual-semana-en-curso` y `jornal-semana-en-curso`, al
+  miércoles.
+
 ## 6. Domingo o feriado trabajado (decisión de José: «rarísimo»)
 
 Se queda la línea `descanso_trabajado`: valor hora × horas ×
@@ -180,7 +197,7 @@ interface PayDay {
 
 interface PayPolicy { weeklyRest: 'semana_completa' | 'proporcional' | 'ninguno'; restDayWorkedPercent: number }
 
-payDays({ days: PayDay[], salaries: Salary[], policy?: Partial<PayPolicy> }) → {
+payDays({ days: PayDay[], salaries: Salary[], policy?: Partial<PayPolicy>, asOf?: string /* hoy, semana en curso */ }) → {
   mode: 'salary' | 'no_salary',
   lines: { concept, quantity, minutes, centimos, period, note }[],
   totalCentimos: number | null, // null sin sueldo vigente
@@ -242,7 +259,7 @@ las semanas ya pagadas, y `closeFixedPeriod` devuelve el saldo
 
 ## 9. Tests
 
-`src/salary.test.ts`, `payDays.test.ts`, `fixedClose.test.ts` y `casos.test.ts` (los 24 casos dorados):
+`src/salary.test.ts`, `payDays.test.ts`, `fixedClose.test.ts` y `casos.test.ts` (los 26 casos dorados):
 
 - Mensual de S/ 3 000 con mes completo en enero (31), febrero (28), febrero
   bisiesto (2028, 29) y abril (30): cada mes cierra en S/ 3 000,00. Adelantos
