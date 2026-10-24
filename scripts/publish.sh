@@ -27,7 +27,9 @@ require_clean_main() {
   [ "$(git -C "$repo" rev-parse --abbrev-ref HEAD)" = main ] || { echo "$repo is not on main"; return 1; }
   # Untracked files (like .claude/gates-ok) do not matter: the script commits only the files it changed.
   [ -z "$(git -C "$repo" status --porcelain --untracked-files=no)" ] || { echo "$repo has uncommitted changes"; return 1; }
-  git -C "$repo" pull --ff-only -q origin main || { echo "$repo cannot fast-forward to origin/main"; return 1; }
+  # Fast-forward to the remote-tracking ref, not FETCH_HEAD: another fetch in the same repo can rewrite FETCH_HEAD mid-pull.
+  git -C "$repo" fetch -q origin main || { echo "$repo cannot fetch origin/main"; return 1; }
+  git -C "$repo" merge --ff-only -q refs/remotes/origin/main || { echo "$repo cannot fast-forward to origin/main"; return 1; }
 }
 
 release() {
@@ -99,7 +101,15 @@ while read -r name repo dirs; do
   fi
 done <"$ROOT/scripts/apps.conf"
 
+# Nobody pushed to an app while its gates ran: otherwise its push would fail after another app was already pushed.
 for repo in "${PREPARED[@]}"; do
-  git -C "$repo" push -q origin main
+  if ! git -C "$repo" fetch -q origin main || ! git -C "$repo" merge-base --is-ancestor refs/remotes/origin/main HEAD; then
+    rollback
+    echo "No app was pushed: $repo moved on origin while the gates ran. Run scripts/publish.sh $VERSION --apps-only again."
+    exit 1
+  fi
+done
+for repo in "${PREPARED[@]}"; do
+  git -C "$repo" push -q origin main || { echo "✗ push of $repo failed after the apps above were pushed: push it by hand"; exit 1; }
   echo "↑ $repo pushed"
 done
