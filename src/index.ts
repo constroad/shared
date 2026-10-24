@@ -8,6 +8,7 @@ export {
   WEEKLY_REST_POLICIES,
   payDays,
   type PayDay,
+  type PayInput,
   type PayLine,
   type PayLineConcept,
   type PayPolicy,

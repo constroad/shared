@@ -29,7 +29,7 @@ export interface GoldenPayCase {
   id: string;
   description: string;
   fn: 'payDays';
-  input: { days: PayDay[]; salaries: Salary[]; policy?: Partial<PayPolicy> };
+  input: { days: PayDay[]; salaries: Salary[]; policy?: Partial<PayPolicy>; asOf?: string };
   attendance?: GoldenAttendance;
   expected: { totalCentimos: number; lines: { concept: PayLineConcept; centimos: number; period: string | null }[] };
 }

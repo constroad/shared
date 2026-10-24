@@ -1362,6 +1362,214 @@
    }
   },
   {
+   "id": "mensual-semana-en-curso",
+   "description": "Mensual de S/ 3 000, semana en curso al miércoles por la mañana (asOf): lunes a miércoles adelantados, sin faltas por hoy ni por lo que viene",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-02-09",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     },
+     {
+      "date": "2026-02-10",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     },
+     {
+      "date": "2026-02-11",
+      "scheduled": true,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     },
+     {
+      "date": "2026-02-12",
+      "scheduled": true,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     },
+     {
+      "date": "2026-02-13",
+      "scheduled": true,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     },
+     {
+      "date": "2026-02-14",
+      "scheduled": true,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     },
+     {
+      "date": "2026-02-15",
+      "scheduled": false,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "monthly",
+      "amount": 3000,
+      "from": "2025-01-01"
+     }
+    ],
+    "asOf": "2026-02-11"
+   },
+   "expected": {
+    "totalCentimos": 32143,
+    "lines": [
+     {
+      "concept": "sueldo",
+      "centimos": 32143,
+      "period": "2026-02"
+     }
+    ]
+   }
+  },
+  {
+   "id": "jornal-semana-en-curso",
+   "description": "Jornal de S/ 80, semana en curso al miércoles (asOf): los días trabajados, sin descanso semanal hasta que cierre la semana",
+   "fn": "payDays",
+   "input": {
+    "days": [
+     {
+      "date": "2026-10-19",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     },
+     {
+      "date": "2026-10-20",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     },
+     {
+      "date": "2026-10-21",
+      "scheduled": true,
+      "worked": true,
+      "excused": false,
+      "regularMin": 480,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     },
+     {
+      "date": "2026-10-22",
+      "scheduled": true,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     },
+     {
+      "date": "2026-10-23",
+      "scheduled": true,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     },
+     {
+      "date": "2026-10-24",
+      "scheduled": true,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     },
+     {
+      "date": "2026-10-25",
+      "scheduled": false,
+      "worked": false,
+      "excused": false,
+      "regularMin": 0,
+      "overtime25Min": 0,
+      "overtime35Min": 0,
+      "restDayMin": 0,
+      "completedNightShift": false
+     }
+    ],
+    "salaries": [
+     {
+      "kind": "daily",
+      "amount": 80,
+      "from": "2026-01-01"
+     }
+    ],
+    "asOf": "2026-10-21"
+   },
+   "expected": {
+    "totalCentimos": 24000,
+    "lines": [
+     {
+      "concept": "dias",
+      "centimos": 24000,
+      "period": null
+     }
+    ]
+   }
+  },
+  {
    "id": "descanso-trabajado",
    "description": "Jornal de S/ 80, 4 h en su domingo: valor hora × horas, sin recargo",
    "fn": "payDays",

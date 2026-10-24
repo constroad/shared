@@ -116,6 +116,38 @@ describe('monthly: the weekly advance by calendar day, overtime over jornal ÷ 8
   });
 });
 
+describe('a week still running (asOf = today)', () => {
+  const FUTURE = { worked: false, regularMin: 0 };
+  /** Wednesday morning: Monday and Tuesday worked, Wednesday not yet, Thursday to Saturday ahead. */
+  const running = week('2026-02-09', { 2: FUTURE, 3: FUTURE, 4: FUTURE, 5: FUTURE });
+
+  it('a monthly salary is advanced up to today, with no absences for today nor the days ahead', () => {
+    const result = payDays({ days: running, salaries: MONTHLY, asOf: '2026-02-11' });
+    expect(result.lines).toEqual([{ concept: 'sueldo', quantity: 3, minutes: null, centimos: 32143, period: '2026-02', note: null }]);
+    expect(result.absences).toEqual([]);
+  });
+
+  it('without asOf every day is over: the days ahead would be absences (what Inframaq found)', () => {
+    const result = payDays({ days: running, salaries: MONTHLY });
+    expect(result.absences).toEqual(['2026-02-11', '2026-02-12', '2026-02-13', '2026-02-14']);
+    expect(lineOf(result.lines, 'faltas')?.centimos).toBe(-40000);
+  });
+
+  it('a day before today without work is an absence', () => {
+    const result = payDays({ days: week('2026-02-09', { 1: FUTURE }), salaries: MONTHLY, asOf: '2026-02-11' });
+    expect(result.absences).toEqual(['2026-02-10']);
+  });
+
+  it('by the day: the days worked so far, and no weekly rest until the week closes', () => {
+    const result = payDays({ days: week(MONDAY, { 3: FUTURE, 4: FUTURE, 5: FUTURE }), salaries: JORNAL, asOf: '2026-10-21' });
+    expect(result.lines.map((line) => [line.concept, line.centimos])).toEqual([['dias', 24000]]);
+  });
+
+  it('with asOf on Sunday the week is closed and earns its rest', () => {
+    expect(lineOf(payDays({ days: week(MONDAY), salaries: JORNAL, asOf: '2026-10-25' }).lines, 'descanso_semanal')?.centimos).toBe(8000);
+  });
+});
+
 describe('by the hour', () => {
   const HOURLY: Salary[] = [{ kind: 'hourly', amount: 12.5, from: '2026-01-01' }];
 

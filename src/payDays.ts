@@ -13,6 +13,8 @@ import { BASE_DAYS, STANDARD_DAY_MIN, dailyRateOf, isFixedSalary, salaryInForce,
  *   treintavo (§4); its overtime comes in the `PayDay`.
  * - Weekly rest (daily and hourly only, closed week of 7 days): the company’s
  *   policy (§5). A fixed salary already pays it.
+ * - `asOf` (today, for a week still running): later days count for nothing,
+ *   and today without work is not an absence yet (§5-bis).
  * - Overtime: hour value (daily rate ÷ 8) × 1.25 the first 2 h of the day,
  *   × 1.35 the rest. Rest day worked: × the company’s surcharge, 100 % by
  *   default («recargo por verificar», §6).
@@ -107,7 +109,8 @@ interface Totals {
 const counted = (): Counted => ({ units: 0, sum: new Map() });
 const entry = (map: Map<string, Counted>, key: string): Counted => map.get(key) ?? map.set(key, counted()).get(key)!;
 
-const isAbsence = (day: PayDay): boolean => day.scheduled && !day.worked && !day.excused;
+/** Without work nor leave; with `asOf`, only a day already over (today is still running). */
+const isAbsence = (day: PayDay, asOf?: string): boolean => day.scheduled && !day.worked && !day.excused && (!asOf || day.date < asOf);
 
 /** Minutes at a percent of the hour value: daily rate × percent × minutes ÷ (8 h × 100). */
 const addMinutes = (target: Counted, minutes: number, rate: CentsFraction, percent: number): void => {
@@ -117,14 +120,14 @@ const addMinutes = (target: Counted, minutes: number, rate: CentsFraction, perce
 };
 
 /** Each calendar day at salary ÷ the days of its period; an absence, minus salary ÷ the base days. Overtime as it comes. */
-const addFixedDay = (totals: Totals, day: PayDay, kind: FixedSalaryKind, cents: number, rate: CentsFraction): void => {
+const addFixedDay = (totals: Totals, day: PayDay, kind: FixedSalaryKind, cents: number, rate: CentsFraction, asOf?: string): void => {
   const period = settlementPeriodOf(kind, day.date);
   const paid = entry(totals.salary, period.key);
   paid.units += 1;
   addExact(paid.sum, cents, period.days);
   addMinutes(totals.extra_25, day.overtime25Min, rate, OVERTIME_PERCENT.extra_25);
   addMinutes(totals.extra_35, day.overtime35Min, rate, OVERTIME_PERCENT.extra_35);
-  if (!isAbsence(day)) return;
+  if (!isAbsence(day, asOf)) return;
   const missing = entry(totals.absences, period.key);
   missing.units += 1;
   addExact(missing.sum, cents, BASE_DAYS[kind]);
@@ -148,13 +151,13 @@ const addDayByHours = (totals: Totals, day: PayDay, salary: Salary, rate: CentsF
   addMinutes(totals.extra_35, Math.max(0, overtimeMin - FIRST_OVERTIME_TIER_MIN), rate, OVERTIME_PERCENT.extra_35);
 };
 
-const accumulate = (days: readonly PayDay[], salaries: readonly Salary[], policy: PayPolicy): Totals => {
+const accumulate = (days: readonly PayDay[], salaries: readonly Salary[], policy: PayPolicy, asOf?: string): Totals => {
   const totals: Totals = { days: counted(), hours: counted(), salary: new Map(), absences: new Map(), extra_25: counted(), extra_35: counted(), descanso_trabajado: counted() };
   for (const day of days) {
     const salary = salaryInForce(salaries, day.date);
     if (!salary) continue;
     const rate = dailyRateOf(salary);
-    if (isFixedSalary(salary.kind)) addFixedDay(totals, day, salary.kind, toCentimos(salary.amount), rate);
+    if (isFixedSalary(salary.kind)) addFixedDay(totals, day, salary.kind, toCentimos(salary.amount), rate, asOf);
     else addDayByHours(totals, day, salary, rate);
     addMinutes(totals.descanso_trabajado, day.restDayMin, rate, policy.restDayWorkedPercent);
   }
@@ -183,10 +186,19 @@ const periodLines = (concept: 'sueldo' | 'faltas', map: Map<string, Counted>): P
 const minuteLine = (concept: 'horas' | 'extra_25' | 'extra_35' | 'descanso_trabajado', value: Counted, note: string | null = null): PayLine[] =>
   value.units > 0 ? [line(concept, { minutes: value.units, centimos: roundExact(value.sum), note })] : [];
 
-export const payDays = ({ days, salaries, policy: overrides = {} }: { days: readonly PayDay[]; salaries: readonly Salary[]; policy?: Partial<PayPolicy> }): PayResult => {
+export interface PayInput {
+  days: readonly PayDay[];
+  salaries: readonly Salary[];
+  policy?: Partial<PayPolicy>;
+  /** Today, for a week still running: later days are left out and today is not an absence yet. Without it, every day is over. */
+  asOf?: string;
+}
+
+export const payDays = ({ days: allDays, salaries, policy: overrides = {}, asOf }: PayInput): PayResult => {
+  const days = asOf ? allDays.filter((day) => day.date <= asOf) : allDays;
   if (!days.some((day) => salaryInForce(salaries, day.date))) return { mode: 'no_salary', lines: [], totalCentimos: null, absences: [], estimated: true };
   const policy = { ...DEFAULT_PAY_POLICY, ...overrides };
-  const totals = accumulate(days, salaries, policy);
+  const totals = accumulate(days, salaries, policy, asOf);
   const lines: PayLine[] = [
     ...(totals.days.units > 0 ? [line('dias', { quantity: totals.days.units, centimos: roundExact(totals.days.sum) })] : []),
     ...minuteLine('horas', totals.hours),
@@ -197,6 +209,6 @@ export const payDays = ({ days, salaries, policy: overrides = {} }: { days: read
     ...minuteLine('extra_35', totals.extra_35),
     ...minuteLine('descanso_trabajado', totals.descanso_trabajado, policy.restDayWorkedPercent === PERCENT ? REST_DAY_NOTE : null),
   ];
-  const absences = days.filter((day) => isAbsence(day) && salaryInForce(salaries, day.date)).map((day) => day.date);
+  const absences = days.filter((day) => isAbsence(day, asOf) && salaryInForce(salaries, day.date)).map((day) => day.date);
   return { mode: 'salary', lines, totalCentimos: lines.reduce((total, current) => total + current.centimos, 0), absences, estimated: true };
 };

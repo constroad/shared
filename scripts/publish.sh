@@ -23,7 +23,8 @@ GATES="${GATES:-$(ls -d "$HOME"/.claude/plugins/cache/constroad-skills/constroad
 require_clean_main() {
   local repo="$1"
   [ "$(git -C "$repo" rev-parse --abbrev-ref HEAD)" = main ] || { echo "$repo is not on main"; return 1; }
-  [ -z "$(git -C "$repo" status --porcelain)" ] || { echo "$repo has uncommitted changes"; return 1; }
+  # Untracked files (like .claude/gates-ok) do not matter: the script commits only the files it changed.
+  [ -z "$(git -C "$repo" status --porcelain --untracked-files=no)" ] || { echo "$repo has uncommitted changes"; return 1; }
   git -C "$repo" pull --ff-only -q origin main || { echo "$repo cannot fast-forward to origin/main"; return 1; }
 }
 
