@@ -76,6 +76,13 @@ bump_app() {
   if (cd "$repo" && bash "$GATES" >"$log" 2>&1); then echo "✓ $name: gates green"; else echo "✗ $name: gates red (log: $log)"; return 1; fi
 }
 
+# Every app clean, on main and current BEFORE the first gates: a dirty one found
+# after minutes of another app’s gates would revert everything for nothing.
+while read -r name repo _dirs; do
+  [[ -z "$name" || "$name" == \#* ]] && continue
+  require_clean_main "${repo/#\~/$HOME}" || { echo "Nothing was published: $name is not ready"; exit 1; }
+done <"$ROOT/scripts/apps.conf"
+
 if [ "$MODE" = "--apps-only" ]; then
   git -C "$ROOT" ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null || { echo "$TAG is not published: run without --apps-only"; exit 1; }
   echo "↻ $TAG already published: only the apps"
