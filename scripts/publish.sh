@@ -3,6 +3,7 @@
 # apps.conf. Run it on YOUR machine, never on the mini:
 #
 #   scripts/publish.sh 0.2.0
+#   scripts/publish.sh 0.2.0 --apps-only   # the tag exists (a run reverted): only the apps
 #
 # 1. Tests, version bump on main, and a release commit OUTSIDE main with dist/
 #    (the only commit that carries it); tag vX.Y.Z on it, pushed.
@@ -12,7 +13,8 @@
 #    no app is pushed and each goes back to where it was: all or none.
 set -euo pipefail
 
-VERSION="${1:?usage: scripts/publish.sh X.Y.Z}"
+VERSION="${1:?usage: scripts/publish.sh X.Y.Z [--apps-only]}"
+MODE="${2:-}"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Version must be X.Y.Z"; exit 1; }
 TAG="v$VERSION"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -74,13 +76,18 @@ bump_app() {
   if (cd "$repo" && bash "$GATES" >"$log" 2>&1); then echo "✓ $name: gates green"; else echo "✗ $name: gates red (log: $log)"; return 1; fi
 }
 
-release
+if [ "$MODE" = "--apps-only" ]; then
+  git -C "$ROOT" ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null || { echo "$TAG is not published: run without --apps-only"; exit 1; }
+  echo "↻ $TAG already published: only the apps"
+else
+  release
+fi
 while read -r name repo dirs; do
   [[ -z "$name" || "$name" == \#* ]] && continue
   repo="${repo/#\~/$HOME}"
   if ! bump_app "$name" "$repo" "$dirs"; then
     rollback
-    echo "No app was pushed. $TAG exists but nobody uses it: fix and publish a new version."
+    echo "No app was pushed. $TAG stays published: fix the app and run scripts/publish.sh $VERSION --apps-only"
     exit 1
   fi
 done <"$ROOT/scripts/apps.conf"

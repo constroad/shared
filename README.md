@@ -26,3 +26,5 @@ casos dorados de `casos.json` en sus tests y muestra `PLANILLA_VERSION` como
 3. `scripts/publish.sh X.Y.Z` desde tu máquina: publica el tag con `dist/` y
    lleva la versión a cada app de `scripts/apps.conf`, con sus gates. Llegan
    todas o ninguna.
+4. Si una app sale roja, el script deja todas como estaban y el tag ya
+   publicado. Arreglas esa app y corres `scripts/publish.sh X.Y.Z --apps-only`.
