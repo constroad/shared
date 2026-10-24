@@ -1,6 +1,6 @@
 {
   "name": "@constroad/planilla",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Cálculo canónico de planilla de ConstRoad (Pulso, Portal, Inframaq): puro, en céntimos enteros, sin dependencias.",
   "license": "UNLICENSED",
