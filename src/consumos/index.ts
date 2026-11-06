@@ -1,5 +1,6 @@
 export * from './consumeAvailability';
 export * from './consumeConstants';
+export * from './consumeDraft';
 export * from './consumeDraftRows';
 export * from './consumeEngine';
 export * from './consumeMovementFlow';
