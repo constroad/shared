@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Publishes a version of @constroad/planilla and takes it to every app in
+# Publishes a version of @constroad/shared and takes it to every app in
 # apps.conf. Run it on YOUR machine, never on the mini:
 #
 #   scripts/publish.sh 0.2.0
@@ -18,7 +18,8 @@ MODE="${2:-}"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Version must be X.Y.Z"; exit 1; }
 TAG="v$VERSION"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-DEPENDENCY="@constroad/planilla@git+ssh://git@github.com/constroad/planilla.git#$TAG"
+# The GitHub repo is still named planilla until its owner renames it; the old URL keeps working after that.
+DEPENDENCY="@constroad/shared@git+ssh://git@github.com/constroad/planilla.git#$TAG"
 GATES="${GATES:-$(ls -d "$HOME"/.claude/plugins/cache/constroad-skills/constroad-gates/*/scripts/gates.sh 2>/dev/null | sort -V | tail -1)}"
 [ -f "$GATES" ] || { echo "constroad-gates not found (set GATES=<path to gates.sh>)"; exit 1; }
 
@@ -37,7 +38,7 @@ release() {
   cd "$ROOT"
   git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && { echo "$TAG already exists"; exit 1; }
   npm pkg set version="$VERSION"
-  sed -i '' "s/PLANILLA_VERSION = '[^']*'/PLANILLA_VERSION = '$VERSION'/" src/version.ts
+  sed -i '' "s/PLANILLA_VERSION = '[^']*'/PLANILLA_VERSION = '$VERSION'/" src/planilla/version.ts
   npm test --silent
   npm run -s typecheck
   git diff --quiet || git commit -qam "release: $TAG"
@@ -73,8 +74,8 @@ bump_app() {
     (cd "$repo/$dir" && npm install --save --no-audit --no-fund --silent "$DEPENDENCY") || return 1
     git -C "$repo" add "$dir/package.json" "$dir/package-lock.json" || return 1
   done
-  git -C "$repo" commit -qm "chore(planilla): $TAG" || return 1
-  local log="/tmp/planilla-gates-$name.log"
+  git -C "$repo" commit -qm "chore(shared): $TAG" || return 1
+  local log="/tmp/shared-gates-$name.log"
   if (cd "$repo" && bash "$GATES" >"$log" 2>&1); then echo "✓ $name: gates green"; else echo "✗ $name: gates red (log: $log)"; return 1; fi
 }
 

@@ -6,7 +6,7 @@ import { payDays } from './payDays';
 
 /** The golden cases through the package itself: the numbers every app must reproduce. */
 
-const golden = JSON.parse(readFileSync(join(__dirname, '..', 'casos.json'), 'utf8')) as GoldenCases;
+const golden = JSON.parse(readFileSync(join(__dirname, '..', '..', 'casos.json'), 'utf8')) as GoldenCases;
 
 describe('casos.json', () => {
   it('covers what José asked for: February, leap year, 16-day half-month, a week across months, absences, overtime and the three weekly-rest options', () => {

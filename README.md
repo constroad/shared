@@ -1,26 +1,36 @@
-# @constroad/planilla
+# @constroad/shared
 
-El cálculo canónico de planilla de ConstRoad: Pulso, Portal e Inframaq pagan
-con este código, sin copias. Es puro, sin dependencias, y todo va en céntimos
-enteros. Las reglas y las decisiones de José están en [SPEC.md](SPEC.md).
+El código de dominio que comparten las apps de ConstRoad, sin copias. Es puro y
+sin dependencias. Hay un solo repo compartido: un tema nuevo es una entrada más,
+no un repo nuevo.
+
+| Entrada | Qué trae | Quién la usa |
+| --- | --- | --- |
+| `@constroad/shared/planilla` | Cálculo de planilla, en céntimos enteros. Reglas en [SPEC.md](SPEC.md) | Inframaq (Pulso sigue en `@constroad/planilla` v0.1.1) |
+| `@constroad/shared/consumos` | Motor de consumos, cálculo de tanques y fechas de Lima | Inframaq; Portal al adoptarla |
 
 ## Usarlo en una app
 
 ```json
-"@constroad/planilla": "git+ssh://git@github.com/constroad/planilla.git#v0.1.0"
+"@constroad/shared": "git+ssh://git@github.com/constroad/planilla.git#v0.2.0"
 ```
 
 ```ts
-import { payDays, closeFixedPeriod, PLANILLA_VERSION } from '@constroad/planilla';
+import { payDays, closeFixedPeriod, PLANILLA_VERSION } from '@constroad/shared/planilla';
+import { computeTankCalculations } from '@constroad/shared/consumos';
 ```
 
 Cada app arma sus `PayDay` desde su asistencia (su adaptador), corre los
 casos dorados de `casos.json` en sus tests y muestra `PLANILLA_VERSION` como
 `planillaVersion` en su `/health`.
 
+`consumos` no conoce Mongoose ni zod: sus tipos son estructurales. Cada app
+conserva su modelo, y `evidences` queda como `unknown[]`, porque cada una tiene
+su propio tipo de archivo.
+
 ## Cambiar el cálculo
 
-1. Test primero en `src/*.test.ts`. Si cambia un número, cambia también
+1. Test primero en `src/<tema>/*.test.ts`. Si cambia un número, cambia también
    `casos.json`.
 2. `npm test && npm run typecheck`.
 3. `scripts/publish.sh X.Y.Z` desde tu máquina: publica el tag con `dist/` y

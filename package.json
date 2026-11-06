@@ -1,11 +1,30 @@
 {
-  "name": "@constroad/planilla",
-  "version": "0.1.1",
+  "name": "@constroad/shared",
+  "version": "0.2.0",
   "private": true,
-  "description": "Cálculo canónico de planilla de ConstRoad (Pulso, Portal, Inframaq): puro, en céntimos enteros, sin dependencias.",
+  "description": "Código de dominio compartido entre las apps de ConstRoad: planilla y consumos. Puro y sin dependencias.",
   "license": "UNLICENSED",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "exports": {
+    "./planilla": {
+      "types": "./dist/planilla/index.d.ts",
+      "default": "./dist/planilla/index.js"
+    },
+    "./consumos": {
+      "types": "./dist/consumos/index.d.ts",
+      "default": "./dist/consumos/index.js"
+    },
+    "./casos.json": "./casos.json"
+  },
+  "typesVersions": {
+    "*": {
+      "planilla": [
+        "dist/planilla/index.d.ts"
+      ],
+      "consumos": [
+        "dist/consumos/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "casos.json"
