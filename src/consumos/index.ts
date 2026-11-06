@@ -1,6 +1,11 @@
+export * from './consumeAvailability';
+export * from './consumeConstants';
+export * from './consumeDraftRows';
 export * from './consumeEngine';
 export * from './consumeMovementFlow';
 export * from './consumePeriod';
+export * from './consumeRateBaseline';
+export * from './consumeRecompute';
 export * from './geometry';
 export * from './peruDates';
 export * from './tankCalculation';
@@ -9,3 +14,4 @@ export * from './tankModel';
 export * from './tankMovementConsume.helpers';
 export * from './tankMovementDates';
 export * from './tankOwnership';
+export * from './toolNumber';
