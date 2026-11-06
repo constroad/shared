@@ -18,8 +18,7 @@ MODE="${2:-}"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Version must be X.Y.Z"; exit 1; }
 TAG="v$VERSION"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-# The GitHub repo is still named planilla until its owner renames it; the old URL keeps working after that.
-DEPENDENCY="@constroad/shared@git+ssh://git@github.com/constroad/planilla.git#$TAG"
+DEPENDENCY="@constroad/shared@git+https://github.com/constroad/shared.git#$TAG"
 GATES="${GATES:-$(ls -d "$HOME"/.claude/plugins/cache/constroad-skills/constroad-gates/*/scripts/gates.sh 2>/dev/null | sort -V | tail -1)}"
 [ -f "$GATES" ] || { echo "constroad-gates not found (set GATES=<path to gates.sh>)"; exit 1; }
 

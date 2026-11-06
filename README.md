@@ -12,7 +12,7 @@ no un repo nuevo.
 ## Usarlo en una app
 
 ```json
-"@constroad/shared": "git+ssh://git@github.com/constroad/planilla.git#v0.2.0"
+"@constroad/shared": "git+https://github.com/constroad/shared.git#v0.2.1"
 ```
 
 ```ts

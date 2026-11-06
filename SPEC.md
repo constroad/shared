@@ -220,9 +220,9 @@ las semanas ya pagadas, y `closeFixedPeriod` devuelve el saldo
 
 ## 7-bis. Cómo se publica y cómo lo consume cada app
 
-- **Dependencia por tag**: `"@constroad/planilla":
-  "git+ssh://git@github.com/constroad/planilla.git#vX.Y.Z"`. La mini clona los
-  repos de constroad por SSH; no hay registry ni token.
+- **Dependencia por tag**: `"@constroad/shared":
+  "github:constroad/shared#vX.Y.Z"`. El repo es público: se instala sin llave ni
+  token, aunque el lock diga `git+ssh`. No hay registry.
 - **El tag trae `dist/`** (JS CommonJS + `.d.ts`) y `casos.json`. `main` no
   lleva `dist/`: solo el commit de release, fuera de `main`. Nada compila al
   instalar.
