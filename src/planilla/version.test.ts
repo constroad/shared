@@ -1,10 +1,7 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { PLANILLA_VERSION } from './version';
 
 describe('PLANILLA_VERSION', () => {
-  it('is the package version: each app reports it in its /health', () => {
-    const manifest = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf8')) as { version: string };
-    expect(PLANILLA_VERSION).toBe(manifest.version);
+  it('names the payroll calculation, not the package: agentes compares it across the apps', () => {
+    expect(PLANILLA_VERSION).toBe('0.1.1');
   });
 });

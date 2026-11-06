@@ -38,7 +38,6 @@ release() {
   cd "$ROOT"
   git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && { echo "$TAG already exists"; exit 1; }
   npm pkg set version="$VERSION"
-  sed -i '' "s/PLANILLA_VERSION = '[^']*'/PLANILLA_VERSION = '$VERSION'/" src/planilla/version.ts
   npm test --silent
   npm run -s typecheck
   git diff --quiet || git commit -qam "release: $TAG"

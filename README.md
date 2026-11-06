@@ -28,6 +28,9 @@ casos dorados de `casos.json` en sus tests y muestra `PLANILLA_VERSION` como
 conserva su modelo, y `evidences` queda como `unknown[]`, porque cada una tiene
 su propio tipo de archivo.
 
+`PLANILLA_VERSION` nombra el cálculo de planilla, no el paquete: agentes lo compara
+entre apps cada hora. Sube solo si cambia un número de planilla, junto con su test.
+
 ## Cambiar el cálculo
 
 1. Test primero en `src/<tema>/*.test.ts`. Si cambia un número, cambia también
