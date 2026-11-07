@@ -2,6 +2,7 @@ import { utf8, zipOneFile } from './zipStore';
 import { colorForPartida, NO_PARTIDA_COLOR } from './partidaColors';
 import { paintSegments, type StreetProgressEvent } from './streetProgress';
 import { sliceLine, type LatLng } from './streetGeometry';
+import { stationLabel } from './kmStrip';
 
 /**
  * The work as a KMZ, so it can still be viewed in Google Earth.
@@ -66,6 +67,8 @@ export interface KmlScope {
   tagIds?: string[];
   /** Contracted partidas. Used when the scope has no tags. */
   partidaIds?: string[];
+  /** Its stage, for the stage filter. */
+  stageId?: string;
 }
 
 export interface KmlProgress {
@@ -84,7 +87,22 @@ const workIdsOf = (scope: KmlScope): string[] =>
     ? (scope.tagIds ?? []).map(String)
     : (scope.partidaIds ?? []).map(String);
 
-interface KmlParams {
+/**
+ * What the file holds (Lilachat exports what its map shows, 07/11). Without them it is the KML
+ * Portal always exported: every work, every street whole as «Pendiente», stretches in metres.
+ */
+export interface KmlOptions {
+  /** Only these works (tags or partidas) and the streets where they apply. */
+  works?: string[];
+  /** Only the scopes of this stage and the streets they touch. */
+  stageId?: string;
+  /** «Pendiente»: each whole street, or each planned stretch plus the streets without one. */
+  pending?: 'street' | 'planned';
+  /** Executed stretch names: «0–120 m», or its stations «0+000 a 0+120». */
+  labels?: 'meters' | 'progresiva';
+}
+
+export interface KmlParams extends KmlOptions {
   obraName: string;
   streets: KmlStreet[];
   scopes: KmlScope[];
@@ -142,6 +160,32 @@ const kmlStyles = (context: KmlContext, usedWorkIds: string[]): string =>
     ...usedWorkIds.map((workId) => lineStyle(`p-${workId}`, kmlColor(context.colorOf(workId)), 6)),
   ].join('');
 
+/** The streets, scopes and works the options leave in the file. */
+interface KmlView {
+  streets: KmlStreet[];
+  scopes: KmlScope[];
+  workIds: string[];
+  narrowed: boolean;
+}
+
+const kmlViewOf = (params: KmlParams): KmlView => {
+  const wanted = params.works && params.works.length > 0 ? new Set(params.works.map(String)) : null;
+  const scopes = params.scopes
+    .filter((scope) => !params.stageId || scope.stageId === params.stageId)
+    .filter((scope) => !wanted || workIdsOf(scope).some((workId) => wanted.has(workId)));
+  const narrowed = Boolean(params.stageId) || wanted !== null;
+  const streets = narrowed
+    ? params.streets.filter((street) => scopes.some((scope) => scope.streetId === street._id))
+    : params.streets;
+  const workIds = Array.from(new Set(scopes.flatMap(workIdsOf))).filter((workId) => !wanted || wanted.has(workId));
+  return { streets, scopes, workIds, narrowed };
+};
+
+const stretchName = (street: string, fromM: number, toM: number, labels: KmlOptions['labels']): string =>
+  labels === 'progresiva'
+    ? `${street} · ${stationLabel(fromM)} a ${stationLabel(toM)}`
+    : `${street} · ${Math.round(fromM)}–${Math.round(toM)} m`;
+
 /** The approved placemarks of one axis on one scope of a street. */
 const scopeDonePlacemarks = (params: {
   context: KmlContext;
@@ -149,8 +193,9 @@ const scopeDonePlacemarks = (params: {
   scope: KmlScope;
   workId: string;
   upToDate?: string;
+  labels?: KmlOptions['labels'];
 }): string[] => {
-  const { context, street, scope, workId, upToDate } = params;
+  const { context, street, scope, workId, upToDate, labels } = params;
   return paintSegments({
     line: street.geometry,
     events: context.eventsOf(street._id),
@@ -161,7 +206,7 @@ const scopeDonePlacemarks = (params: {
     .filter((segment) => segment.state === 'approved')
     .map((segment) =>
       placemark({
-        name: `${street.name} · ${Math.round(segment.fromM)}–${Math.round(segment.toM)} m`,
+        name: stretchName(street.name, segment.fromM, segment.toM, labels),
         styleId: `p-${workId}`,
         line: segment.points.length >= 2
           ? segment.points
@@ -171,30 +216,45 @@ const scopeDonePlacemarks = (params: {
 };
 
 /** One folder per axis with what was executed, drawn over the street line. */
-const doneFolders = (params: KmlParams, context: KmlContext, usedWorkIds: string[]): string[] =>
-  usedWorkIds.flatMap((workId) => {
-    const marks = params.streets.flatMap((street) =>
-      params.scopes
+const doneFolders = (params: KmlParams, context: KmlContext, view: KmlView): string[] =>
+  view.workIds.flatMap((workId) => {
+    const marks = view.streets.flatMap((street) =>
+      view.scopes
         .filter((scope) => scope.streetId === street._id)
         .filter((scope) => workIdsOf(scope).includes(workId))
         .flatMap((scope) =>
-          scopeDonePlacemarks({ context, street, scope, workId, upToDate: params.upToDate })
+          scopeDonePlacemarks({ context, street, scope, workId, upToDate: params.upToDate, labels: params.labels })
         )
     );
     if (marks.length === 0) return [];
     return [`<Folder><name>${escapeXml(context.nameOf(workId))}</name>${marks.join('')}</Folder>`];
   });
 
-export const buildWorkStreetsKml = (params: KmlParams): string => {
-  const { obraName, streets, scopes } = params;
-  const context = buildKmlContext(params);
-  const usedWorkIds = Array.from(new Set(scopes.flatMap(workIdsOf)));
+const pendingMark = (street: KmlStreet, line: LatLng[]): string =>
+  placemark({ name: street.name, styleId: 'pendiente', line });
 
-  // The whole street line, in grey: it is the contracted area, done or not.
-  const pending = streets.map((street) =>
-    placemark({ name: street.name, styleId: 'pendiente', line: street.geometry })
-  );
-  const done = doneFolders(params, context, usedWorkIds);
+/** Each planned stretch, and the streets without one while nothing narrows the file. */
+const plannedPlacemarks = (view: KmlView): string[] => {
+  const stretches = view.scopes.flatMap((scope) => {
+    const street = view.streets.find((one) => one._id === scope.streetId);
+    const line = street ? sliceLine(street.geometry, scope.fromM, scope.toM) : [];
+    return street && line.length >= 2 ? [pendingMark(street, line)] : [];
+  });
+  const bare = view.narrowed
+    ? []
+    : view.streets.filter((street) => street.geometry.length >= 2 && !view.scopes.some((scope) => scope.streetId === street._id));
+  return [...stretches, ...bare.map((street) => pendingMark(street, street.geometry))];
+};
+
+export const buildWorkStreetsKml = (params: KmlParams): string => {
+  const context = buildKmlContext(params);
+  const view = kmlViewOf(params);
+
+  // By default the whole street line, in grey: it is the contracted area, done or not.
+  const pending = params.pending === 'planned'
+    ? plannedPlacemarks(view)
+    : view.streets.map((street) => pendingMark(street, street.geometry));
+  const done = doneFolders(params, context, view);
 
   const folders = [
     done.length > 0 ? `<Folder><name>Ejecutado</name>${done.join('')}</Folder>` : '',
@@ -204,8 +264,8 @@ export const buildWorkStreetsKml = (params: KmlParams): string => {
   return (
     '<?xml version="1.0" encoding="UTF-8"?>' +
     '<kml xmlns="http://www.opengis.net/kml/2.2">' +
-    `<Document><name>${escapeXml(obraName)}</name>` +
-    kmlStyles(context, usedWorkIds) +
+    `<Document><name>${escapeXml(params.obraName)}</name>` +
+    kmlStyles(context, view.workIds) +
     folders +
     '</Document></kml>'
   );

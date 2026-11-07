@@ -1,4 +1,4 @@
-import { cutoffDates, kmLabel, kmStrip } from './kmStrip';
+import { cutoffDates, kmLabel, kmStrip, stationLabel } from './kmStrip';
 
 const street = { _id: 'c1', name: 'Jirón Pedro Silva', lengthM: 2140, widthM: 6 };
 const scope = { _id: 'a1', streetId: 'c1', fromM: 0, toM: 2140, partidaIds: [], tagIds: ['t1', 't2'] };
@@ -117,5 +117,13 @@ describe('kmLabel', () => {
     expect(kmLabel(650)).toBe('Km 0+650');
     expect(kmLabel(1800)).toBe('Km 1+800');
     expect(kmLabel(2140.14)).toBe('Km 2+140');
+  });
+});
+
+describe('stationLabel', () => {
+  it('is the chainage without «Km», rounded to the metre', () => {
+    expect(stationLabel(40)).toBe('0+040');
+    expect(stationLabel(1250.6)).toBe('1+251');
+    expect(stationLabel(0)).toBe('0+000');
   });
 });

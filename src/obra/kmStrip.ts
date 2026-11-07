@@ -231,3 +231,6 @@ export const kmLabel = (meters: number): string => {
   const remainder = wholeMeters - km * 1000;
   return `Km ${km}+${String(remainder).padStart(3, '0')}`;
 };
+
+/** The chainage without the «Km»: «0+650», as a stretch is named («0+040 a 0+150»). */
+export const stationLabel = (meters: number): string => kmLabel(meters).slice('Km '.length);
