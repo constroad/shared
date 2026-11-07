@@ -2,7 +2,7 @@
   "name": "@constroad/shared",
   "version": "0.4.1",
   "private": true,
-  "description": "Código de dominio compartido entre las apps de ConstRoad: planilla y consumos. Puro y sin dependencias.",
+  "description": "Código de dominio compartido entre las apps de ConstRoad: planilla, consumos y flota. Puro y sin dependencias.",
   "license": "UNLICENSED",
   "exports": {
     "./planilla": {
@@ -13,6 +13,10 @@
       "types": "./dist/consumos/index.d.ts",
       "default": "./dist/consumos/index.js"
     },
+    "./flota": {
+      "types": "./dist/flota/index.d.ts",
+      "default": "./dist/flota/index.js"
+    },
     "./casos.json": "./casos.json"
   },
   "typesVersions": {
@@ -22,6 +26,9 @@
       ],
       "consumos": [
         "dist/consumos/index.d.ts"
+      ],
+      "flota": [
+        "dist/flota/index.d.ts"
       ]
     }
   },
