@@ -12,6 +12,7 @@ export * from './peruDates';
 export * from './tankCalculation';
 export * from './tankEngine';
 export * from './tankEvidenceGate';
+export * from './tankMeasure';
 export * from './tankModel';
 export * from './tankMovementConsume.helpers';
 export * from './tankMovementDates';
