@@ -4,8 +4,19 @@ const SQUARE = { totalWidth: '2', totalLength: '4', totalHeight: '1.5' };
 const CONCAVE = { totalWidth: '2.4', totalLength: '5', totalHeight: '1.5', squareHeight: '1', centralConcaveWidth: '1' };
 
 describe('plateKeyOf', () => {
-  it('reads the same plate however it was typed', () => {
-    expect(['B4X 836', 'b4x-836', ' B4X836 '].map(plateKeyOf)).toEqual(['B4X836', 'B4X836', 'B4X836']);
+  // Forms found in production. Portal's `normalizeTransportPlateKey` runs this same table.
+  it.each([
+    ['B4X 836', 'B4X836'],
+    ['b4x-836', 'B4X836'],
+    [' B4X836 ', 'B4X836'],
+    ['T2T-809', 'T2T809'],
+    ['c9r753', 'C9R753'],
+    ['AFY 827', 'AFY827'],
+    ['AFY827', 'AFY827'],
+    ['AKT-813', 'AKT813'],
+    ['  -- ', ''],
+  ])('reads %s as %s', (plate, key) => {
+    expect(plateKeyOf(plate)).toBe(key);
   });
 
   it('has no key for a missing plate', () => {
