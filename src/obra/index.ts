@@ -27,3 +27,4 @@ export * from './streetMatch';
 export * from './matchTrust';
 export * from './mapTap';
 export * from './mapLayers';
+export * from './streetPick';
