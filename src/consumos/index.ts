@@ -1,3 +1,4 @@
+export * from './clientConsumeView';
 export * from './consumeAvailability';
 export * from './consumeConstants';
 export * from './consumeDraft';
