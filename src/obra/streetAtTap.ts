@@ -37,5 +37,28 @@ export function streetAtTap({ underFinger, nearby, tap }: TapFeatures): BasemapS
   const named = (feature: BasemapFeatureLike) => ({ ...feature, properties: { ...(feature.properties ?? {}), name } });
   // The anonymous pieces under the finger take the street's name, so they join its named pieces around.
   const sameStreet = around.filter((feature) => feature?.properties?.name === name);
-  return streetFromBasemapFeatures([...roads.map(named), ...sameStreet], tap);
+  return streetFromBasemapFeatures(withoutRepeats([...roads.map(named), ...sameStreet]), tap);
+}
+
+const lineKey = (feature: BasemapFeatureLike): string => {
+  const coordinates = feature?.geometry?.coordinates;
+  if (!Array.isArray(coordinates)) return '';
+  const forward = JSON.stringify(coordinates);
+  const backward = JSON.stringify([...coordinates].reverse());
+  return forward < backward ? forward : backward;
+};
+
+/**
+ * The drawn road and its name label are the SAME line in the tiles (`transportation` and
+ * `transportation_name`), and a tile edge repeats it too. Joined twice, the street doubles back on
+ * itself and its length doubles: each line enters once, whichever way it runs.
+ */
+function withoutRepeats(features: BasemapFeatureLike[]): BasemapFeatureLike[] {
+  const seen = new Set<string>();
+  return features.filter((feature) => {
+    const key = lineKey(feature);
+    if (!key || seen.has(key)) return !key;
+    seen.add(key);
+    return true;
+  });
 }
