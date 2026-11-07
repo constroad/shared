@@ -6,7 +6,7 @@ no un repo nuevo.
 
 | Entrada | Qué trae | Quién la usa |
 | --- | --- | --- |
-| `@constroad/shared/planilla` | Cálculo de planilla, en céntimos enteros. Reglas en [SPEC.md](SPEC.md) | Inframaq (Pulso sigue en `@constroad/planilla` v0.1.1) |
+| `@constroad/shared/planilla` | Cálculo de planilla, en céntimos enteros. Reglas en [SPEC.md](SPEC.md) | Pulso, Portal e Inframaq |
 | `@constroad/shared/consumos` | Motor de consumos, cálculo de tanques y fechas de Lima | Inframaq; Portal al adoptarla |
 
 ## Usarlo en una app
