@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import { lengthOfLine } from './streetGeometry';
 import { pickStreet, pickedLine, pickedRange, tapOnPick, PICK_SWITCH_M } from './streetPick';
 
@@ -16,12 +15,12 @@ describe('picking a street and the stretch of work on it', () => {
   it('starts with the whole street and its name, waiting for the start', () => {
     const pick = pickStreet(street);
     expect(pick).toMatchObject({ name: 'Jr. Los Pinos', fromM: null, toM: null });
-    expect(Math.round(lengthOfLine(pickedLine(pick)))).toBe(500);
-    expect(pickedRange(pick)).toEqual({ fromM: 0, toM: 500, step: 'start' });
+    expect(Math.round(lengthOfLine(pickedLine(pick!)))).toBe(500);
+    expect(pickedRange(pick!)).toEqual({ fromM: 0, toM: 500, step: 'start' });
   });
 
   it('the first tap on it is the start, the second the end, in any order', () => {
-    const started = tapOnPick(pickStreet(street), { lat: -12.00005, lng: east(320).lng });
+    const started = tapOnPick(pickStreet(street)!, { lat: -12.00005, lng: east(320).lng });
     expect(started.kind).toBe('marked');
     const pick = started.kind === 'marked' ? started.pick : null;
     expect(pickedRange(pick!)).toMatchObject({ fromM: 320, step: 'end' });
@@ -32,7 +31,7 @@ describe('picking a street and the stretch of work on it', () => {
   });
 
   it('a third tap starts the stretch again from there', () => {
-    let pick = pickStreet(street);
+    let pick = pickStreet(street)!;
     for (const meters of [100, 300, 450]) {
       const next = tapOnPick(pick, east(meters));
       if (next.kind === 'marked') pick = next.pick;
@@ -42,7 +41,7 @@ describe('picking a street and the stretch of work on it', () => {
 
   it('a tap away from the street asks for another street instead of moving the stretch', () => {
     const far = { lat: -12 + (PICK_SWITCH_M + 5) / 111_195, lng: east(100).lng };
-    expect(tapOnPick(pickStreet(street), far)).toEqual({ kind: 'other_street' });
+    expect(tapOnPick(pickStreet(street)!, far)).toEqual({ kind: 'other_street' });
   });
 
   it('a street that is not a line is nothing to pick', () => {
