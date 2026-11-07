@@ -14,6 +14,7 @@ export * from './kmStrip';
 export * from './workMapOverview';
 export * from './clientWorkStreets';
 export * from './discharges';
+export * from './dischargeStretches';
 export * from './dispatchClientFacingM3';
 export * from './kmzExport';
 export * from './zipStore';
