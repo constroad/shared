@@ -1,6 +1,6 @@
 {
   "name": "@constroad/shared",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "private": true,
   "description": "Código de dominio compartido entre las apps de ConstRoad: planilla, consumos, flota, mapa de obra e informes de campo. Puro y sin dependencias.",
   "license": "UNLICENSED",
