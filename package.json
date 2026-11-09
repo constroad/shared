@@ -1,6 +1,6 @@
 {
   "name": "@constroad/shared",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "description": "Código de dominio compartido entre las apps de ConstRoad: planilla, consumos, flota, mapa de obra e informes de campo. Puro y sin dependencias.",
   "license": "UNLICENSED",
@@ -25,6 +25,10 @@
       "types": "./dist/informes/index.d.ts",
       "default": "./dist/informes/index.js"
     },
+    "./kardex": {
+      "types": "./dist/kardex/index.d.ts",
+      "default": "./dist/kardex/index.js"
+    },
     "./casos.json": "./casos.json"
   },
   "typesVersions": {
@@ -43,6 +47,9 @@
       ],
       "informes": [
         "dist/informes/index.d.ts"
+      ],
+      "kardex": [
+        "dist/kardex/index.d.ts"
       ]
     }
   },
