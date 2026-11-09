@@ -29,3 +29,5 @@ export * from './mapTap';
 export * from './mapLayers';
 export * from './streetPick';
 export * from './streetAtTap';
+export * from './mapPhotos';
+export * from './workMapStyle';
