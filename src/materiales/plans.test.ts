@@ -1,5 +1,5 @@
 import { MAX_MOVEMENT_QUANTITY, checkMovementQuantity, describeMovement, planMaterialMovement } from './movementPlan';
-import { receptionFromPicks, validateReceptionFields } from './receptionPlan';
+import { MAX_RECEPTION_M3, MAX_RECEPTION_PHOTOS, MIN_RECEPTION_PHOTOS, receptionFromPicks, validateReceptionFields } from './receptionPlan';
 
 const NOW = new Date('2026-11-09T12:00:00Z');
 
@@ -96,5 +96,11 @@ describe('validateReceptionFields', () => {
 
   it('the optional numbers may be absent', () => {
     expect(validateReceptionFields({ ...good, m3: undefined, esponjamientoPct: 0, measuredState: 'banco' })).toEqual({ ok: true });
+  });
+});
+
+describe('the limits of a reception', () => {
+  it('one truck is at most 500 m³ and the evidence is one to six photos', () => {
+    expect([MAX_RECEPTION_M3, MIN_RECEPTION_PHOTOS, MAX_RECEPTION_PHOTOS]).toEqual([500, 1, 6]);
   });
 });

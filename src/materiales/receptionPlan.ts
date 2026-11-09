@@ -6,6 +6,12 @@ import { buildInputArrivalISOString } from '../kardex/inputArrivalDate';
  * zod schema and Inframaq's model must agree on both, so they live here.
  */
 
+/** One reception is one truck: beyond this many cubic metres it is a typo, not a load. */
+export const MAX_RECEPTION_M3 = 500;
+/** The evidence of a reception: at least one photo of the load, at most six. */
+export const MIN_RECEPTION_PHOTOS = 1;
+export const MAX_RECEPTION_PHOTOS = 6;
+
 export type ReceptionMaterial = { id: string; name?: string; description?: string; unit?: string; level?: unknown };
 export type ReceptionProvider = { id: string; name: string };
 
