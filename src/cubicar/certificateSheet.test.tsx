@@ -117,4 +117,18 @@ describe('CubicageCertificateSheet', () => {
     expect(CERTIFICATE_CSS(true)).toContain('margin: 12mm');
     expect(CERTIFICATE_CSS(false)).toContain('margin: 0');
   });
+
+  it('leaves out the number and the date a truck does not have, instead of printing them bare', () => {
+    // Arrange
+    const { number: _number, measuredAt: _measuredAt, ...bare } = VIEW;
+
+    // Act
+    render(<CubicageCertificateSheet view={{ ...bare, measuredBy: { companyName: 'INFRAMAQ S.A.C.' } }} />);
+
+    // Assert
+    expect(screen.queryByText(/N\.º/)).toBeNull();
+    expect(screen.queryByText(/Cubicado:/)).toBeNull();
+    expect(screen.getByText('Página 1 / 1')).toBeTruthy();
+    expect(screen.getByText('Medido por INFRAMAQ S.A.C.')).toBeTruthy();
+  });
 });

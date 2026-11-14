@@ -84,10 +84,12 @@ const Header = ({ view }: { view: CubicageCertificateView }) => (
     </div>
     <div className="doc">
       <span className="chip">Certificado de cubicaje</span>
-      <div className="number mono">N.º {view.number}</div>
-      <div>
-        Cubicado: <strong>{day(view.measuredAt)}</strong> · {time(view.measuredAt)}
-      </div>
+      {view.number ? <div className="number mono">N.º {view.number}</div> : null}
+      {view.measuredAt ? (
+        <div>
+          Cubicado: <strong>{day(view.measuredAt)}</strong> · {time(view.measuredAt)}
+        </div>
+      ) : null}
     </div>
   </header>
 );
@@ -217,13 +219,13 @@ const Footer = ({ view }: { view: CubicageCertificateView }) => (
         <div className="muted">Responsable del cubicaje</div>
       </div>
       <div className="doc muted">
-        {view.measuredBy ? <div>{`Medido por ${view.measuredBy.companyName} el ${day(view.measuredAt)}`}</div> : null}
+        {view.measuredBy ? <div>{`Medido por ${view.measuredBy.companyName}${view.measuredAt ? ` el ${day(view.measuredAt)}` : ''}`}</div> : null}
         {view.previous ? <div>{`Reemplaza al cubicaje anterior de la unidad ${view.plate}`}</div> : null}
       </div>
     </div>
     <div className="meta mono">
       <span>Generado desde el cubicaje registrado</span>
-      <span>{`${view.number} · Página 1 / 1`}</span>
+      <span>{view.number ? `${view.number} · Página 1 / 1` : 'Página 1 / 1'}</span>
     </div>
   </>
 );

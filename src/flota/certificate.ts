@@ -35,12 +35,14 @@ export interface CubicageCertificateIssuer {
 }
 
 export interface CubicageCertificateView {
-  number: string;
+  /** Absent when the truck has no numbered certificate (Portal's own fleet): the sheet leaves it out. */
+  number?: string;
   plate: string;
   shape: TruckShape;
   shapeLabel: string;
   cubicator: string;
-  measuredAt: string;
+  /** Absent when nobody knows when it was measured: the sheet does not make a date up. */
+  measuredAt?: string;
   previous?: { m3: number; at?: string };
   issuer: CubicageCertificateIssuer;
   /** Another company measured the truck: its frozen name. */
@@ -56,11 +58,11 @@ export interface CubicageCertificateView {
 }
 
 export interface CubicageCertificateInput {
-  number: string;
+  number?: string;
   plate: string;
   shape: TruckShape;
   cubicator: string;
-  measuredAt: Date | string;
+  measuredAt?: Date | string;
   m3: number;
   measures: CubicageMeasures;
   previous?: { m3?: number; at?: Date | string };
@@ -113,12 +115,12 @@ export const certificateFigureUrl = (origin: string, shape: TruckShape): string 
 export const certificateViewOf = (input: CubicageCertificateInput, options: CubicageCertificateOptions): CubicageCertificateView => {
   const measures = measuresOf(input.shape, input.measures);
   return {
-  number: input.number,
+  ...(input.number ? { number: input.number } : {}),
   plate: input.plate,
   shape: input.shape,
   shapeLabel: SHAPE_LABEL[input.shape],
   cubicator: input.cubicator,
-  measuredAt: new Date(input.measuredAt).toISOString(),
+  ...(input.measuredAt ? { measuredAt: new Date(input.measuredAt).toISOString() } : {}),
   ...previousOf(input.previous),
   issuer: options.issuer,
   ...(options.measuredBy ? { measuredBy: options.measuredBy } : {}),

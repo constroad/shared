@@ -73,3 +73,14 @@ describe('certificateViewOf with only the measured values', () => {
     expect(Number(view.figure.leftConcaveWidth)).toBeCloseTo(0.6);
   });
 });
+
+describe('certificateViewOf without number or date', () => {
+  it('leaves them out of the view instead of inventing them', () => {
+    const { number: _number, measuredAt: _measuredAt, ...bare } = CONCAVE;
+
+    const view = certificateViewOf(bare, OPTIONS);
+
+    expect(view).not.toHaveProperty('number');
+    expect(view).not.toHaveProperty('measuredAt');
+  });
+});
