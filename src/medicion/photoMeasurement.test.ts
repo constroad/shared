@@ -45,10 +45,10 @@ describe('photoMeasurement', () => {
       height: 2,
     });
 
-    // Triángulo con SÓLO 2 de sus 3 lados cargados: sin el tercero no hay ni
-    // área exacta ni techo, así que queda la estimación por cámara — marcada
-    // como tal, y con el perímetro también estimado (el lado que falta lo puso
-    // la escala, no la wincha).
+    // Triangle with ONLY 2 of its 3 sides entered: without the third there is
+    // neither an exact area nor a ceiling, so the camera estimate remains,
+    // marked as such, and with the perimeter also estimated (the missing side
+    // came from the scale, not the tape).
     expect(estimateMeasurementMetrics(shape)).toEqual({
       area: 24,
       areaFuente: 'estimada',
@@ -70,12 +70,12 @@ describe('photoMeasurement', () => {
         { id: 'b', x: 4, y: 0 },
         { id: 'c', x: 4, y: 3 },
       ],
-      isClosed: false, // sin cerrar: antes daba area/volume = null ("S = -")
+      isClosed: false, // not closed: it used to give area/volume = null ("S = -")
       distances: { 'a:b': 8, 'b:c': 6 },
       height: 2,
     });
     const metrics = estimateMeasurementMetrics(shape);
-    expect(metrics.area).toBe(24); // el área ya cierra el contorno (shoelace)
+    expect(metrics.area).toBe(24); // the area already closes the outline (shoelace)
     expect(metrics.volume).toBe(48); // = area * height
   });
 
@@ -152,24 +152,23 @@ describe('photoMeasurement', () => {
 });
 
 /**
- * Al entrar a medir, ¿las herramientas tapan la foto?
+ * When measuring starts, do the tools cover the photo?
  *
- * **El pedido (José, 01/09/2026):** «tengo que seleccionar el icono de medida y
- * después colapsar las herramientas para recién ahí poder trazar; ¿no sería
- * mejor poder trazar directamente?».
+ * **The request (José, 01/09/2026):**
+ * «tengo que seleccionar el icono de medida y después colapsar las herramientas para recién ahí poder trazar; ¿no sería mejor poder trazar directamente?».
  *
- * El panel es `absolute` sobre la foto y arrancaba SIEMPRE abierto, ocupando
- * hasta 62vh: en un celular tapa justo la zona donde hay que tocar. Cada foto
- * costaba un plegado manual antes de empezar.
+ * The panel is `absolute` over the photo and always started open, taking up to
+ * 62vh: on a phone it covers exactly the area to tap. Every photo cost a manual
+ * fold before starting.
  *
- * Pero no siempre estorba: al REABRIR una medición ya hecha, lo que el operador
- * viene a ver son los números (lados, altura, espesor), no a dibujar de nuevo.
- * Por eso depende de si ya hay algo trazado.
+ * But it is not always in the way: when REOPENING a finished measurement, the
+ * operator comes to see the numbers (sides, height, thickness), not to draw
+ * again. So it depends on whether something is already drawn.
  */
 
 describe('el área nunca supera lo que los lados permiten', () => {
-  // Coordenadas normalizadas del trazo sobre la foto (perspectiva: el lado
-  // cercano tiene 42× más píxeles por metro que el lejano).
+  // Normalized coordinates of the drawing on the photo (perspective: the near
+  // side has 42× more pixels per meter than the far one).
   const estacionamiento = normalizeMeasurementShape({
     points: [
       { id: 'a', x: 0.4937, y: 0.4063 },
@@ -187,7 +186,7 @@ describe('el área nunca supera lo que los lados permiten', () => {
 
     expect(metrics.areaFuente).toBe('maximo');
     expect(metrics.area).toBeCloseTo(245.22, 2);
-    expect(metrics.volume).toBeCloseTo(24.28, 2); // 24 m³, lo que José dijo que entraba
+    expect(metrics.volume).toBeCloseTo(24.28, 2); // 24 m³, what José said went in
     expect(relacionArea(metrics.areaFuente)).toBe('≤');
   });
 
@@ -200,7 +199,7 @@ describe('el área nunca supera lo que los lados permiten', () => {
   it('con la diagonal el área pasa a ser exacta y baja del techo', () => {
     const metrics = estimateMeasurementMetrics({
       ...estacionamiento,
-      diagonals: { 'diag-0': 46 }, // del punto 1 al 3
+      diagonals: { 'diag-0': 46 }, // from point 1 to 3
     });
 
     expect(metrics.areaFuente).toBe('medida');
@@ -210,12 +209,12 @@ describe('el área nunca supera lo que los lados permiten', () => {
   });
 
   it('por qué la diagonal no se puede adivinar: 44 m y 46 m dan áreas MUY distintas', () => {
-    const conDiagonal = (largo: number) =>
+    const withDiagonal = (largo: number) =>
       estimateMeasurementMetrics({ ...estacionamiento, diagonals: { 'diag-0': largo } }).area;
 
-    // Los mismos cuatro lados y la misma foto: el cuadrilátero es articulado.
-    expect(conDiagonal(44)).toBeCloseTo(87.93, 2);
-    expect(conDiagonal(46)).toBeCloseTo(211.14, 2);
+    // Same four sides and same photo: the quadrilateral is hinged.
+    expect(withDiagonal(44)).toBeCloseTo(87.93, 2);
+    expect(withDiagonal(46)).toBeCloseTo(211.14, 2);
   });
 
   it('una diagonal imposible se avisa y NO se convierte en área', () => {
@@ -225,23 +224,23 @@ describe('el área nunca supera lo que los lados permiten', () => {
     });
 
     expect(metrics.diagonalesIncoherentes).toBe(true);
-    expect(metrics.areaFuente).toBe('maximo'); // se cae al techo, que sigue siendo cierto
+    expect(metrics.areaFuente).toBe('maximo'); // falls back to the ceiling, which still holds
     expect(metrics.area).toBeCloseTo(245.22, 2);
   });
 
   it('cuando la estimación por cámara es lo único que hay, va acotada al techo', () => {
-    // Un lado sin cargar: no hay área exacta. La estimación se recorta al techo
-    // que permitan los lados que sí están, y jamás lo supera.
+    // One side not entered: no exact area. The estimate is cut to the ceiling
+    // the entered sides allow, and never exceeds it.
     const metrics = estimateMeasurementMetrics(estacionamiento);
     expect(metrics.area as number).toBeLessThanOrEqual(metrics.areaMaxima as number);
   });
 });
 
 describe('el aspecto de la foto entra en la geometría', () => {
-  // Mismo trazo (un cuadrado en coordenadas normalizadas) sobre una foto
-  // vertical 9:16. En la imagen real ese "cuadrado" es un rectángulo:
-  // 0.5 de ancho son 0.5×(9/16) de alto. Sin el aspecto se lo trataba como
-  // cuadrado y el lado horizontal salía 1.78× más corto de lo que es.
+  // Same drawing (a square in normalized coordinates) on a 9:16 portrait
+  // photo. In the real image that "square" is a rectangle: 0.5 of the width
+  // is 0.5×(9/16) of the height. Without the aspect it was treated as a square
+  // and the horizontal side came out 1.78× shorter than it is.
   const trazo = {
     points: [
       { id: 'a', x: 0.25, y: 0.25 },
@@ -250,7 +249,7 @@ describe('el aspecto de la foto entra en la geometría', () => {
       { id: 'd', x: 0.25, y: 0.75 },
     ],
     isClosed: true,
-    // Sólo el lado vertical medido: el resto lo completa la escala.
+    // Only the vertical side measured: the scale fills in the rest.
     distances: { 'b:c': 16 },
   };
 
@@ -260,8 +259,8 @@ describe('el aspecto de la foto entra en la geometría', () => {
     );
     const escala = 16 / edges[1].pixelLength;
 
-    // El lado horizontal abarca 0.5 del ancho y el vertical 0.5 del alto:
-    // en metros el horizontal tiene que medir 9/16 del vertical.
+    // The horizontal side spans 0.5 of the width and the vertical 0.5 of the
+    // height: in meters the horizontal must measure 9/16 of the vertical.
     expect(edges[0].pixelLength * escala).toBeCloseTo(9, 6);
   });
 
@@ -272,19 +271,19 @@ describe('el aspecto de la foto entra en la geometría', () => {
   });
 
   it('el área estimada también se corrige, no sólo los largos', () => {
-    const conAspecto = estimateMeasurementMetrics({ ...trazo, imageAspect: 9 / 16 });
-    const sinAspecto = estimateMeasurementMetrics(trazo);
-    expect(conAspecto.area as number).toBeCloseTo(9 * 16, 4);
-    expect(sinAspecto.area as number).toBeCloseTo(16 * 16, 4);
+    const withAspect = estimateMeasurementMetrics({ ...trazo, imageAspect: 9 / 16 });
+    const withoutAspect = estimateMeasurementMetrics(trazo);
+    expect(withAspect.area as number).toBeCloseTo(9 * 16, 4);
+    expect(withoutAspect.area as number).toBeCloseTo(16 * 16, 4);
   });
 });
 
 /**
- * Informes ya capturados: el área guardada se ACOTA al leerla.
+ * Reports already captured: the stored area is BOUNDED when read.
  *
- * Los informes anteriores al 05/09/2026 guardaron áreas imposibles. El campo es
- * editable en el canvas, así que no se recalcula (pisaría una corrección a mano):
- * sólo se recorta lo que ningún polígono con esos lados puede encerrar.
+ * Reports before 05/09/2026 stored impossible areas. The field is editable on
+ * the canvas, so it is not recomputed (it would overwrite a hand correction):
+ * only what no polygon with those sides can enclose is cut.
  */
 
 describe('boundedPhotoArea / boundedPhotoVolume', () => {

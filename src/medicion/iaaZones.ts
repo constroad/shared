@@ -1,8 +1,8 @@
 /**
- * Helpers PUROS de las zonas del informe de área adicional (F6b).
- * Extraídos de la lógica local de `AreaAdicionalForm` (Chakra, que no se toca
- * hasta el swap — dedup al eliminarlo): los totales de área/volumen por zona
- * se derivan de las fotos MEDIDAS cuya `category` es el id de la zona.
+ * PURE helpers for the zones of the additional area report (F6b).
+ * Extracted from the local logic of `AreaAdicionalForm` (Chakra, untouched until
+ * the swap; dedup when it is removed): the area/volume totals per zone are
+ * derived from the MEASURED photos whose `category` is the zone id.
  */
 import {
   boundedPhotoArea,
@@ -19,13 +19,14 @@ export type IaaZoneRow = {
   volumen: number | string;
   observaciones: string;
   /**
-   * El total lo escribió una persona y deja de derivarse de las fotos.
+   * A person wrote the total, and it stops being derived from the photos.
    *
-   * Existe porque hay mediciones que el motor no puede guardar: si la figura se
-   * dibujó sin medir los lados, el área sale de la escala en píxeles (`estimada`)
-   * y se descarta a propósito. En CHANCAY (17/10/2026) fueron 4 de 20, y sin
-   * esto el cuadro quedaba corto sin más salida que volver al campo. La pantalla
-   * avisa, al lado del número, que ya no coincide con sus fotos.
+   * It exists because some measurements cannot be stored by the engine: if the
+   * figure was drawn without measuring the sides, the area comes from the pixel
+   * scale (`estimada`) and is discarded on purpose. In CHANCAY (17/10/2026) that
+   * was 4 of 20, and without this the table fell short with no way out but going
+   * back to the field. The screen warns, next to the number, that it no longer
+   * matches its photos.
    */
   manual?: boolean;
   /**
@@ -47,7 +48,7 @@ export type IaaMeasuredPhoto = {
   category?: string;
   areaM2?: number;
   volumeM3?: number;
-  /** Los lados medidos. Acotan el área guardada: ver `boundedPhotoArea`. */
+  /** The measured sides. They bound the stored area: see `boundedPhotoArea`. */
   measurement?: Partial<MeasurementShape> | null;
 };
 
@@ -83,11 +84,11 @@ export const emptyIaaZone = (index: number): IaaZoneRow => ({
 });
 
 /**
- * Suma área/volumen de las fotos medidas por zona (`photo.category` = zona.id).
+ * Sums the area/volume of the measured photos per zone (`photo.category` = zone.id).
  *
- * Cada foto entra ACOTADA por lo que sus propios lados permiten: los informes
- * capturados antes del 05/09/2026 guardaron áreas imposibles (745 m² con un techo
- * de 245) y este total va al cuadro de metrado que se presenta a cobro.
+ * Each photo counts BOUNDED by what its own sides allow: reports captured
+ * before 05/09/2026 stored impossible areas (745 m² with a ceiling of 245) and
+ * this total goes to the quantities table that is billed.
  */
 export const getZonePhotoTotals = (
   photos: IaaMeasuredPhoto[]
@@ -106,10 +107,10 @@ export const getZonePhotoTotals = (
   }, {});
 
 /**
- * Lo que suman las fotos medidas de UNA zona, o `null` si no tiene ninguna.
+ * What the measured photos of ONE zone add up to, or `null` if it has none.
  *
- * Es lo que se le muestra a quien escribió el total a mano: sin el número
- * medido al lado, el aviso de «no coincide» no dice con qué no coincide.
+ * It is what is shown to whoever wrote the total by hand: without the measured
+ * number next to it, the «no coincide» notice does not say what it differs from.
  */
 export const zoneMeasuredTotal = (
   zoneId: string,
@@ -117,7 +118,7 @@ export const zoneMeasuredTotal = (
 ): { area: number; volume: number } | null =>
   getZonePhotoTotals(photos)[String(zoneId)] ?? null;
 
-/** Aplica los totales medidos a las zonas (área/volumen readonly salvo manual). */
+/** Applies the measured totals to the zones (area/volume read-only unless manual). */
 export const applyZonePhotoTotals = (
   rows: IaaZoneRow[],
   photos: IaaMeasuredPhoto[]
@@ -135,14 +136,14 @@ export const applyZonePhotoTotals = (
 };
 
 /**
- * Recalcula area/volumen de las zonas para la tabla EDITABLE del canvas + el PDF:
- * - zona CON fotos → suma medida (readonly de facto: la manda la foto).
- * - zona que PERDIÓ su última foto (estaba en `prevPhotos`, ya no en `photos`) →
- *   se resetea a vacío (no dejar un total huérfano que sobre-reporte).
- * - zona que NUNCA tuvo fotos → conserva su valor tecleado a mano.
- * - zona marcada `manual` → intacta: el número lo puso una persona (ver `manual`).
- * `prevPhotos` es opcional: el server (PDF) recomputa sin prev (las huérfanas ya
- * quedaron reseteadas por el cliente y se conservan como manual vacío).
+ * Recomputes the zones' area/volume for the canvas EDITABLE table + the PDF:
+ * - zone WITH photos → measured sum (read-only in practice: the photo rules).
+ * - zone that LOST its last photo (it was in `prevPhotos`, no longer in `photos`) →
+ *   reset to empty (do not leave an orphan total that over-reports).
+ * - zone that NEVER had photos → keeps its hand-typed value.
+ * - zone marked `manual` → untouched: a person set the number (see `manual`).
+ * `prevPhotos` is optional: the server (PDF) recomputes without prev (orphans
+ * were already reset by the client and are kept as an empty manual value).
  */
 export const recomputeZoneTotals = (
   rows: IaaZoneRow[],
@@ -162,11 +163,11 @@ export const recomputeZoneTotals = (
 };
 
 /**
- * Agrupa entradas de foto (con su índice original) por zona, en el ORDEN de las
- * zonas; las que no tienen zona (o con `category` que ya no matchea ninguna zona)
- * van al final como "Sin zona". Puro y genérico — lo comparten el canvas admin y
- * el panel fotográfico móvil público. El índice original se preserva para editar/
- * borrar la foto correcta tras agrupar.
+ * Groups photo entries (with their original index) by zone, in the zones' ORDER;
+ * those without a zone (or whose `category` no longer matches any zone) go last
+ * as "Sin zona". Pure and generic: shared by the admin canvas and the public
+ * mobile photo panel. The original index is kept to edit/delete the right photo
+ * after grouping.
  */
 export const groupPhotosByZone = <T extends { category?: string }>(
   entries: Array<{ photo: T; index: number }>,
@@ -189,7 +190,7 @@ export const groupPhotosByZone = <T extends { category?: string }>(
   return result;
 };
 
-/** Re-enumera y castea numéricos (paridad con `normalizeAreaRows` del form). */
+/** Renumbers and casts numerics (parity with the form's `normalizeAreaRows`). */
 export const normalizeIaaZones = (rows: IaaZoneRow[]): IaaZoneRow[] =>
   rows.map((row, index) => ({
     ...row,

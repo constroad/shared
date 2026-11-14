@@ -1,78 +1,79 @@
 /**
- * Modo A ESCUADRA: área de un polígono ORTOGONAL a partir de sus lados. Motor
- * PURO. Existe por el incidente Globofast (30/09/2026): un hueco de
- * (3.30 + 4.10) × 0.65 = 4.81 m² salía 9–20 m² porque cinco lados sin
- * diagonales no determinan el polígono, y se mostraba el techo cíclico.
+ * A ESCUADRA mode (square corners): area of an ORTHOGONAL polygon from its
+ * sides. PURE engine. It exists because of the Globofast incident (30/09/2026):
+ * a hole of (3.30 + 4.10) × 0.65 = 4.81 m² came out as 9–20 m², because five
+ * sides without diagonals do not determine the polygon, and the cyclic ceiling
+ * was shown.
  *
- * Bacheos y huecos se cortan con sierra: esquinas a 90°. Con esa premisa el
- * polígono SÍ queda determinado por los largos, más el sentido de cada giro
- * (izquierda/derecha/recto), que se lee del dibujo sobre la foto. La
- * perspectiva deforma los ángulos pero conserva dos cosas: el sentido de giro
- * (con todos los puntos delante de la cámara) y la colinealidad.
+ * Patches and holes are cut with a saw: corners at 90°. With that premise the
+ * polygon IS determined by the lengths, plus the direction of each turn
+ * (left/right/straight), which is read from the drawing on the photo.
+ * Perspective distorts the angles but keeps two things: the turn direction
+ * (with every point in front of the camera) and collinearity.
  *
- * Es una poligonal cerrada de topografía:
- * 1. Se recorre girando 90° según el dibujo (el vértice dudoso —¿esquina o
- *    recto?— lo decide el cierre: se prueban las combinaciones).
- * 2. El ERROR DE CIERRE (dónde termina vs. dónde empezó) mide la calidad: un
- *    largo mal tipeado no cierra; dos anchos distintos cierran casi.
- * 3. El error se reparte por EJE, en partes iguales entre los lados de ese eje
- *    (dos anchos → su promedio), para que la figura siga siendo ortogonal.
- * 4. Área por la fórmula del zapatero sobre la planta ajustada.
+ * It is a closed survey traverse:
+ * 1. Walk it turning 90° as drawn (the doubtful vertex, corner or straight,
+ *    is decided by the closure: every combination is tried).
+ * 2. The CLOSURE ERROR (where it ends vs. where it started) measures quality:
+ *    a mistyped length does not close; two different widths almost close.
+ * 3. The error is spread per AXIS, in equal parts among that axis' sides
+ *    (two widths → their average), so the figure stays orthogonal.
+ * 4. Area by the shoelace formula over the adjusted plan.
  */
 
 export type Giro = 'izquierda' | 'derecha' | 'recto';
-export type EstadoEscuadra = 'medida' | 'faltan-datos' | 'no-ortogonal' | 'no-cierra';
+export type EscuadraStatus = 'medida' | 'faltan-datos' | 'no-ortogonal' | 'no-cierra';
 
 export interface PuntoPlano {
   x: number;
   y: number;
 }
 
-/** Error de cierre: en metros y como fracción del perímetro. */
+/** Closure error: in meters and as a fraction of the perimeter. */
 export interface CierreEscuadra {
   distancia: number;
   relativo: number;
 }
 
 export interface AreaEscuadra {
-  estado: EstadoEscuadra;
-  /** m². `null` salvo que el estado sea `medida`. */
+  estado: EscuadraStatus;
+  /** m². `null` unless the status is `medida`. */
   area: number | null;
-  /** Giro en cada vértice i (entre el lado i-1 y el lado i). */
+  /** Turn at each vertex i (between side i-1 and side i). */
   giros: Giro[];
   cierre: CierreEscuadra | null;
-  /** Planta reconstruida en metros, vértice 0 en el origen. Ajustada si cerró. */
+  /** Rebuilt plan in meters, vertex 0 at the origin. Adjusted if it closed. */
   planta: PuntoPlano[] | null;
 }
 
-export interface EntradaEscuadra {
-  /** Puntos del dibujo, en orden, normalizados 0..1 por eje. */
+export interface EscuadraInput {
+  /** Drawing points, in order, normalized 0..1 per axis. */
   points: Array<{ x: number; y: number }>;
-  /** Largo del lado i (vértice i → i+1); el último cierra contra el vértice 0. */
+  /** Length of side i (vertex i → i+1); the last one closes against vertex 0. */
   lados: Array<number | null | undefined>;
-  /** Ancho/alto de la foto: sin él los ángulos del dibujo salen deformados. */
+  /** Photo width/height: without it the drawing's angles come out distorted. */
   aspect?: number;
-  /** Giro impuesto por el usuario en un vértice, por encima del dibujo. */
+  /** Turn forced by the user at a vertex, overriding the drawing. */
   girosForzados?: Partial<Record<number, Giro>>;
 }
 
 /**
- * Cuánto puede INCLINARSE un lado para absorber el error de cierre: seno del
- * ángulo. El error de cierre en un eje lo absorben, inclinándose, los lados del
- * OTRO eje: un largo mal medido (7.40 vs 7.10) obliga a los anchos de 0.65 a
- * inclinarse 27° y el área real es 11 % menor que la promediada; dos anchos
- * distintos (0.65 vs 0.70) inclinan los largos 0.4° y el promedio es exacto.
- * Con sin θ ≤ 0.14, 1 − cos θ ≤ 1 %: el promedio por eje entra en el 1 %.
+ * How much a side may TILT to absorb the closure error: sine of the angle. The
+ * closure error on one axis is absorbed by the sides of the OTHER axis tilting:
+ * a mismeasured length (7.40 vs 7.10) forces the 0.65 widths to tilt 27° and
+ * the real area is 11 % smaller than the averaged one; two different widths
+ * (0.65 vs 0.70) tilt the lengths 0.4° and the average is exact.
+ * With sin θ ≤ 0.14, 1 − cos θ ≤ 1 %: the per-axis average stays within 1 %.
  */
 export const INCLINACION_MAXIMA = 0.14;
 
-/** Desvío respecto de la recta por debajo del cual el vértice es un quiebre colineal. */
+/** Deviation from the straight line below which the vertex is a collinear break. */
 const RECTO_MAX_RAD = (20 * Math.PI) / 180;
-/** Desvío por encima del cual es una esquina sin duda. Entre ambos, lo decide el cierre. */
+/** Deviation above which it is surely a corner. In between, the closure decides. */
 const ESQUINA_MIN_RAD = (60 * Math.PI) / 180;
-/** Vértices dudosos que se combinan (2^n): más allá se toman como esquina. */
+/** Doubtful vertices that get combined (2^n): beyond that they count as corners. */
 const MAX_DUDOSOS = 10;
-/** Un polígono simple ortogonal da exactamente una vuelta: cuatro giros netos. */
+/** A simple orthogonal polygon makes exactly one turn: four net turns. */
 const GIROS_NETOS_DE_UNA_VUELTA = 4;
 
 const esMedidaValida = (valor: unknown): valor is number =>
@@ -84,19 +85,19 @@ interface GiroDibujado {
   claridad: 'recto' | 'esquina' | 'dudoso';
 }
 
-/** Sentido y claridad de cada giro según el dibujo (x escalado por el aspecto). */
-const clasificarGirosDibujados = (points: EntradaEscuadra['points'], aspect: number): GiroDibujado[] => {
+/** Direction and clarity of each turn per the drawing (x scaled by the aspect). */
+const clasificarGirosDibujados = (points: EscuadraInput['points'], aspect: number): GiroDibujado[] => {
   const n = points.length;
   return points.map((actual, i) => {
     const previo = points[(i - 1 + n) % n];
-    const siguiente = points[(i + 1) % n];
+    const next = points[(i + 1) % n];
     const ux = (actual.x - previo.x) * aspect;
     const uy = actual.y - previo.y;
-    const vx = (siguiente.x - actual.x) * aspect;
-    const vy = siguiente.y - actual.y;
+    const vx = (next.x - actual.x) * aspect;
+    const vy = next.y - actual.y;
     const cruz = ux * vy - uy * vx;
     const punto = ux * vx + uy * vy;
-    // 0 = sigue derecho, π = vuelve sobre sus pasos.
+    // 0 = keeps straight, π = goes back the way it came.
     const desvio = Math.atan2(Math.abs(cruz), punto);
     const claridad = desvio < RECTO_MAX_RAD ? 'recto' : desvio > ESQUINA_MIN_RAD ? 'esquina' : 'dudoso';
     return { sentido: cruz >= 0 ? 'izquierda' : 'derecha', claridad };
@@ -117,34 +118,34 @@ interface Poligonal {
   cierre: PuntoPlano;
 }
 
-/** Recorre la poligonal desde el origen con rumbo +x; el giro del vértice 0 no se aplica. */
+/** Walks the traverse from the origin heading +x; the turn at vertex 0 is not applied. */
 const recorrer = (lados: number[], giros: Giro[]): Poligonal => {
   let rumbo: PuntoPlano = { x: 1, y: 0 };
-  const pasos = lados.map((largo, i) => {
+  const steps = lados.map((largo, i) => {
     if (i > 0) rumbo = girar(rumbo, giros[i]);
     return { rumbo, largo };
   });
-  const cierre = pasos.reduce(
+  const cierre = steps.reduce(
     (fin, paso) => ({ x: fin.x + paso.rumbo.x * paso.largo, y: fin.y + paso.rumbo.y * paso.largo }),
     { x: 0, y: 0 }
   );
-  return { pasos, cierre };
+  return { pasos: steps, cierre };
 };
 
-const plantaDesde = (pasos: Array<{ dx: number; dy: number }>): PuntoPlano[] => {
+const planFromSteps = (steps: Array<{ dx: number; dy: number }>): PuntoPlano[] => {
   const planta: PuntoPlano[] = [{ x: 0, y: 0 }];
-  pasos.forEach((paso) => {
+  steps.forEach((paso) => {
     const previo = planta[planta.length - 1];
     planta.push({ x: previo.x + paso.dx, y: previo.y + paso.dy });
   });
   return planta.slice(0, -1);
 };
 
-/** Reparte el cierre por eje, en partes iguales entre los lados de ese eje. */
-const ajustarPorEje = (poligonal: Poligonal): PuntoPlano[] => {
+/** Spreads the closure per axis, in equal parts among that axis' sides. */
+const adjustPerAxis = (poligonal: Poligonal): PuntoPlano[] => {
   const horizontales = poligonal.pasos.filter((paso) => paso.rumbo.x !== 0).length;
   const verticales = poligonal.pasos.length - horizontales;
-  return plantaDesde(
+  return planFromSteps(
     poligonal.pasos.map((paso) => ({
       dx: paso.rumbo.x * paso.largo - (paso.rumbo.x !== 0 && horizontales > 0 ? poligonal.cierre.x / horizontales : 0),
       dy: paso.rumbo.y * paso.largo - (paso.rumbo.y !== 0 && verticales > 0 ? poligonal.cierre.y / verticales : 0),
@@ -155,12 +156,12 @@ const ajustarPorEje = (poligonal: Poligonal): PuntoPlano[] => {
 const areaZapatero = (planta: PuntoPlano[]): number =>
   Math.abs(
     planta.reduce((suma, actual, i) => {
-      const siguiente = planta[(i + 1) % planta.length];
-      return suma + actual.x * siguiente.y - siguiente.x * actual.y;
+      const next = planta[(i + 1) % planta.length];
+      return suma + actual.x * next.y - next.x * actual.y;
     }, 0) / 2
   );
 
-/** Todas las asignaciones esquina/recto para los vértices dudosos. */
+/** Every corner/straight assignment for the doubtful vertices. */
 const candidatos = (dibujados: GiroDibujado[], forzados: Partial<Record<number, Giro>>): Giro[][] => {
   const dudosos = dibujados
     .map((giro, i) => (forzados[i] === undefined && giro.claridad === 'dudoso' ? i : -1))
@@ -175,16 +176,16 @@ const candidatos = (dibujados: GiroDibujado[], forzados: Partial<Record<number, 
   );
 };
 
-export const areaEscuadra = (entrada: EntradaEscuadra): AreaEscuadra => {
+export const areaEscuadra = (entrada: EscuadraInput): AreaEscuadra => {
   const { points, lados, aspect = 1, girosForzados = {} } = entrada;
-  const vacio = { area: null, cierre: null, planta: null };
+  const empty = { area: null, cierre: null, planta: null };
   if (points.length !== lados.length || !lados.every(esMedidaValida)) {
-    return { estado: 'faltan-datos', giros: [], ...vacio };
+    return { estado: 'faltan-datos', giros: [], ...empty };
   }
   const ladosOk = lados as number[];
   const dibujados = clasificarGirosDibujados(points, aspect);
   const girosDibujo = dibujados.map((giro, i) => girosForzados[i] ?? (giro.claridad === 'recto' ? 'recto' : giro.sentido));
-  if (points.length < 4) return { estado: 'no-ortogonal', giros: girosDibujo, ...vacio };
+  if (points.length < 4) return { estado: 'no-ortogonal', giros: girosDibujo, ...empty };
 
   let mejor: { giros: Giro[]; poligonal: Poligonal } | null = null;
   for (const giros of candidatos(dibujados, girosForzados)) {
@@ -194,34 +195,34 @@ export const areaEscuadra = (entrada: EntradaEscuadra): AreaEscuadra => {
       mejor = { giros, poligonal };
     }
   }
-  if (!mejor) return { estado: 'no-ortogonal', giros: girosDibujo, ...vacio };
+  if (!mejor) return { estado: 'no-ortogonal', giros: girosDibujo, ...empty };
 
   const perimetro = ladosOk.reduce((suma, lado) => suma + lado, 0);
   const distancia = Math.hypot(mejor.poligonal.cierre.x, mejor.poligonal.cierre.y);
   const cierre = { distancia, relativo: distancia / perimetro };
   const largoHorizontal = mejor.poligonal.pasos.filter((paso) => paso.rumbo.x !== 0).reduce((suma, paso) => suma + paso.largo, 0);
   const largoVertical = perimetro - largoHorizontal;
-  if (largoHorizontal === 0 || largoVertical === 0) return { estado: 'no-ortogonal', giros: mejor.giros, ...vacio };
-  // El cierre en x lo absorben los lados verticales, y viceversa.
+  if (largoHorizontal === 0 || largoVertical === 0) return { estado: 'no-ortogonal', giros: mejor.giros, ...empty };
+  // The closure in x is absorbed by the vertical sides, and vice versa.
   const inclinacion = Math.max(
     Math.abs(mejor.poligonal.cierre.x) / largoVertical,
     Math.abs(mejor.poligonal.cierre.y) / largoHorizontal
   );
   if (inclinacion > INCLINACION_MAXIMA) {
-    const planta = plantaDesde(mejor.poligonal.pasos.map((paso) => ({ dx: paso.rumbo.x * paso.largo, dy: paso.rumbo.y * paso.largo })));
+    const planta = planFromSteps(mejor.poligonal.pasos.map((paso) => ({ dx: paso.rumbo.x * paso.largo, dy: paso.rumbo.y * paso.largo })));
     return { estado: 'no-cierra', area: null, giros: mejor.giros, cierre, planta };
   }
-  const planta = ajustarPorEje(mejor.poligonal);
+  const planta = adjustPerAxis(mejor.poligonal);
   return { estado: 'medida', area: areaZapatero(planta), giros: mejor.giros, cierre, planta };
 };
 
-const CM_POR_M = 100;
+const CM_PER_M = 100;
 const PCT = 100;
 
-/** Qué le dice el panel al operador sobre el modo a escuadra. `null` = nada que decir. */
+/** What the panel tells the operator about the a escuadra mode. `null` = nothing to say. */
 export const describirEscuadra = (escuadra: AreaEscuadra | null): { tono: 'ok' | 'alerta'; texto: string } | null => {
   if (!escuadra) return null;
-  const cm = (m: number) => Math.round(m * CM_POR_M);
+  const cm = (m: number) => Math.round(m * CM_PER_M);
   const pct = (fraccion: number) => (fraccion * PCT).toFixed(1);
   switch (escuadra.estado) {
     case 'medida':

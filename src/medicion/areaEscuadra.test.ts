@@ -1,29 +1,29 @@
 /**
- * Modo A ESCUADRA (José, 30/09/2026, tras el incidente Globofast).
+ * A ESCUADRA mode (José, 30/09/2026, after the Globofast incident).
  *
- * Bacheos y huecos se cortan con sierra: esquinas a 90°. Un polígono
- * ortogonal queda DETERMINADO por sus lados más el sentido de cada giro — y el
- * sentido lo da el dibujo sobre la foto (la perspectiva deforma los ángulos,
- * pero no invierte izquierda/derecha ni rompe la colinealidad). Así el hueco de
- * Globofast, (3.30 + 4.10) × 0.65, sale exacto sin diagonales.
+ * Patches and holes are cut with a saw: corners at 90°. An orthogonal polygon
+ * is DETERMINED by its sides plus the direction of each turn, and the
+ * direction comes from the drawing on the photo (perspective distorts the
+ * angles, but it does not swap left/right nor break collinearity). So the
+ * Globofast hole, (3.30 + 4.10) × 0.65, comes out exact without diagonals.
  *
- * El motor es una poligonal cerrada de topografía: se recorre girando 90°, se
- * mide el ERROR DE CIERRE, se reparte por eje (para que siga siendo ortogonal)
- * y el área sale por la fórmula del zapatero. Un cierre malo es la señal de
- * que un largo está mal tipeado, o de que la figura no era a escuadra.
+ * The engine is a closed survey traverse: walk it turning 90°, measure the
+ * CLOSURE ERROR, spread it per axis (so it stays orthogonal) and get the area
+ * by the shoelace formula. A bad closure signals a mistyped length, or a
+ * figure that was not square-cornered.
  */
 import { areaEscuadra } from './areaEscuadra';
 
 const p = (x: number, y: number) => ({ x, y });
 
-// Rectángulo 7.40 × 0.65 visto desde arriba.
+// A 7.40 × 0.65 rectangle seen from above.
 const rectangulo = {
   points: [p(0.2, 0.2), p(0.8, 0.2), p(0.8, 0.4), p(0.2, 0.4)],
   lados: [7.4, 0.65, 7.4, 0.65],
 };
 
-// La franja de Globofast: el lado largo de abajo tiene un quiebre COLINEAL en
-// c (3.30 + 4.10); el de arriba es un solo tramo de 7.40.
+// The Globofast strip: the long bottom side has a COLLINEAR break at c
+// (3.30 + 4.10); the top one is a single 7.40 stretch.
 const franjaGlobofast = {
   points: [p(0.2, 0.2), p(0.2, 0.4), p(0.5, 0.4), p(0.8, 0.4), p(0.8, 0.2)],
   lados: [0.65, 3.3, 4.1, 0.65, 7.4],
@@ -48,7 +48,7 @@ describe('areaEscuadra — figuras determinadas por sus lados', () => {
   });
 
   it('una L de seis lados', () => {
-    // Planta (m): (0,0) (4,0) (4,3) (2,3) (2,1) (0,1). Área 4×1 + 2×2 = 8.
+    // Plan (m): (0,0) (4,0) (4,3) (2,3) (2,1) (0,1). Area 4×1 + 2×2 = 8.
     const r = areaEscuadra({
       points: [p(0.1, 0.1), p(0.5, 0.1), p(0.5, 0.4), p(0.3, 0.4), p(0.3, 0.2), p(0.1, 0.2)],
       lados: [4, 3, 2, 2, 2, 1],
@@ -56,7 +56,7 @@ describe('areaEscuadra — figuras determinadas por sus lados', () => {
 
     expect(r.estado).toBe('medida');
     expect(r.area).toBeCloseTo(8, 4);
-    // Cinco giros al mismo lado y uno al contrario: la esquina entrante de la L.
+    // Five turns to the same side and one the other way: the L's inner corner.
     expect(r.giros.filter((g) => g === 'derecha')).toHaveLength(1);
   });
 
@@ -77,8 +77,8 @@ describe('areaEscuadra — figuras determinadas por sus lados', () => {
   });
 
   it('la perspectiva no lo confunde: un rectángulo dibujado como trapecio sigue siendo rectángulo', () => {
-    // Foto en ángulo: el borde cercano se ve más ancho. Las esquinas se dibujan
-    // a ~70° y ~110°, pero son cuatro giros al mismo lado.
+    // Photo at an angle: the near edge looks wider. The corners are drawn at
+    // ~70° and ~110°, but they are four turns to the same side.
     const r = areaEscuadra({
       points: [p(0.3, 0.2), p(0.7, 0.2), p(0.9, 0.8), p(0.1, 0.8)],
       lados: [7.4, 0.65, 7.4, 0.65],
@@ -97,8 +97,8 @@ describe('areaEscuadra — figuras determinadas por sus lados', () => {
 
 describe('areaEscuadra — cierre', () => {
   it('lados opuestos que no coinciden: se promedian por eje, y el cierre se informa', () => {
-    // El ancho se midió 0.65 en un extremo y 0.70 en el otro: el hueco no es
-    // perfecto. Ajuste por eje = ancho medio 0.675, largo medio 7.39.
+    // The width was measured 0.65 at one end and 0.70 at the other: the hole is
+    // not perfect. Per-axis adjustment = mean width 0.675, mean length 7.39.
     const r = areaEscuadra({ ...rectangulo, lados: [7.4, 0.65, 7.38, 0.7] });
 
     expect(r.estado).toBe('medida');
@@ -117,7 +117,7 @@ describe('areaEscuadra — cierre', () => {
   });
 
   it('la tolerancia la fija el OTRO eje: 30 cm entre dos largos no cierra (los anchos se inclinarían 27°)', () => {
-    // Promediar daría 7.25 × 0.65 = 4.71; el trapecio real mide 4.18: 11 % de más.
+    // Averaging would give 7.25 × 0.65 = 4.71; the real trapezoid is 4.18: 11 % too much.
     const r = areaEscuadra({ ...rectangulo, lados: [7.4, 0.65, 7.1, 0.65] });
 
     expect(r.estado).toBe('no-cierra');
@@ -131,8 +131,8 @@ describe('areaEscuadra — cierre', () => {
   });
 
   it('un vértice dudoso en el dibujo (¿esquina o recto?) lo decide el cierre', () => {
-    // c dibujado 26° fuera de la línea b–d: como esquina el polígono no cierra
-    // (cinco giros de 90° no suman una vuelta); como recto, cierra exacto.
+    // c drawn 26° off the b–d line: as a corner the polygon does not close
+    // (five 90° turns do not add up to one revolution); as straight, it closes exactly.
     const r = areaEscuadra({
       ...franjaGlobofast,
       points: [p(0.2, 0.2), p(0.2, 0.4), p(0.5, 0.33), p(0.8, 0.4), p(0.8, 0.2)],
@@ -162,13 +162,13 @@ describe('areaEscuadra — lo que NO es a escuadra', () => {
   });
 
   it('un quiebre dibujado como esquina clara (67°) no cierra: el usuario lo fuerza a recto', () => {
-    const conEsquina = {
+    const withCorner = {
       ...franjaGlobofast,
       points: [p(0.2, 0.2), p(0.2, 0.4), p(0.5, 0.2), p(0.8, 0.4), p(0.8, 0.2)],
     };
 
-    expect(areaEscuadra(conEsquina).estado).toBe('no-ortogonal');
-    const forzado = areaEscuadra({ ...conEsquina, girosForzados: { 2: 'recto' } });
+    expect(areaEscuadra(withCorner).estado).toBe('no-ortogonal');
+    const forzado = areaEscuadra({ ...withCorner, girosForzados: { 2: 'recto' } });
     expect(forzado.estado).toBe('medida');
     expect(forzado.area).toBeCloseTo(4.81, 4);
   });

@@ -1,22 +1,22 @@
 /**
- * Qué m²/m³ se GUARDAN en la foto del informe (incidente Globofast, 30/09/2026).
+ * Which m²/m³ are STORED on the report photo (Globofast incident, 30/09/2026).
  *
- * El cliente recibió «17.05 m² · 0.631 m³» sobre un hueco de 4.81 m²: una
- * franja de 0.65 de ancho con un quiebre en un lado largo (3.30 + 4.10). Sin
- * diagonales el motor no tiene área medida y muestra el TECHO cíclico (S ≤),
- * que para un rectángulo coincide con lo real y para un pentágono se abre a
- * 2–4× el área. Hasta hoy ese techo se guardaba como `areaM2`, se multiplicaba
- * por el espesor y se SUMABA en el cuadro de metrados del IAA.
+ * The client got «17.05 m² · 0.631 m³» for a 4.81 m² hole: a 0.65-wide strip
+ * with a break on one long side (3.30 + 4.10). Without diagonals the engine has
+ * no measured area and shows the cyclic CEILING (S ≤), which matches reality
+ * for a rectangle and opens up to 2–4× the area for a pentagon. Until then that
+ * ceiling was stored as `areaM2`, multiplied by the thickness and ADDED to the
+ * IAA quantities table.
  *
- * Regla: lo que se guarda, suma o multiplica es SOLO lo medido. Un techo (≤) y
- * una estimación por cámara (≈) orientan en pantalla; no son datos del informe.
+ * Rule: what is stored, summed or multiplied is ONLY what was measured. A
+ * ceiling (≤) and a camera estimate (≈) guide on screen; they are not report data.
  */
 import { applyPersistedMetric, persistedPhotoMetrics } from './persistedPhotoMetrics';
 import { estimateMeasurementMetrics } from './photoMeasurement';
 
 const p = (id: string, x: number, y: number) => ({ id, x, y });
-// La franja con quiebre del incidente, en una foto vertical 9:16.
-const franjaConQuiebre = {
+// The incident's strip with a break, on a 9:16 portrait photo.
+const stripWithBreak = {
   points: [p('a', 0.56, 0.2), p('b', 0.27, 0.72), p('c', 0.45, 0.74), p('d', 0.63, 0.75), p('e', 0.71, 0.24)],
   isClosed: true,
   distances: { 'a:b': 0.65, 'b:c': 3.3, 'c:d': 4.1, 'd:e': 0.65, 'e:a': 7.4 },
@@ -26,13 +26,13 @@ const franjaConQuiebre = {
 
 describe('persistedPhotoMetrics', () => {
   it('el TECHO no se guarda: sin diagonales el informe no recibe m² ni m³, y LIMPIA lo viejo', () => {
-    const metrics = estimateMeasurementMetrics(franjaConQuiebre);
-    // En pantalla sigue orientando: S ≤ 9.09 (lo que permiten esos cinco lados).
+    const metrics = estimateMeasurementMetrics(stripWithBreak);
+    // On screen it still guides: S ≤ 9.09 (what those five sides allow).
     expect(metrics.areaFuente).toBe('maximo');
     expect(metrics.area).toBeCloseTo(9.09, 2);
 
-    // `null`, no `undefined`: el consumidor mergea con `??` sobre la foto
-    // guardada, y con `undefined` el 17.05 de Globofast sobrevivía a re-medir.
+    // `null`, not `undefined`: the consumer merges with `??` over the stored
+    // photo, and with `undefined` the Globofast 17.05 survived a re-measure.
     expect(persistedPhotoMetrics(metrics)).toEqual({ areaM2: null, volumeM3: null });
   });
 
@@ -44,13 +44,13 @@ describe('persistedPhotoMetrics', () => {
   });
 
   it('con las diagonales el área es medida, y ESA sí se guarda con su volumen', () => {
-    // Dos diagonales desde el vértice a: a→c = √(3.30²+0.65²) y a→d = √(7.40²+0.65²).
-    // El quiebre es COLINEAL (3.30 + 4.10 sobre la misma recta), así que el
-    // triángulo del medio es casi chato y muy sensible: con las diagonales
-    // redondeadas al cm (3.36 / 7.43) Herón da 4.71, no 4.81. Es una limitación
-    // real de medir una franja con quiebre: mejor dos rectángulos.
+    // Two diagonals from vertex a: a→c = √(3.30²+0.65²) and a→d = √(7.40²+0.65²).
+    // The break is COLLINEAR (3.30 + 4.10 on the same line), so the middle
+    // triangle is almost flat and very sensitive: with the diagonals rounded to
+    // the cm (3.36 / 7.43) Heron gives 4.71, not 4.81. It is a real limit of
+    // measuring a strip with a break: two rectangles are better.
     const metrics = estimateMeasurementMetrics({
-      ...franjaConQuiebre,
+      ...stripWithBreak,
       diagonals: { 'diag-0': 3.3634, 'diag-1': 7.4285 },
     });
 
@@ -61,9 +61,9 @@ describe('persistedPhotoMetrics', () => {
   });
 
   it('un rectángulo sin diagonal TAMPOCO se guarda, aunque el techo coincida con lo real', () => {
-    // Cuatro lados no determinan el cuadrilátero: el mismo 0.65/7.4/0.65/7.4
-    // puede ser un rombo achatado con menos área. Que el techo acierte con el
-    // rectángulo es geometría, no una medida — y era el atajo del cubicador.
+    // Four sides do not determine the quadrilateral: the same 0.65/7.4/0.65/7.4
+    // can be a flattened rhombus with less area. The ceiling matching the
+    // rectangle is geometry, not a measurement, and it was the estimator's shortcut.
     const metrics = estimateMeasurementMetrics({
       points: [p('a', 0.56, 0.2), p('b', 0.27, 0.72), p('c', 0.63, 0.75), p('d', 0.71, 0.24)],
       isClosed: true,
@@ -72,14 +72,14 @@ describe('persistedPhotoMetrics', () => {
       imageAspect: 0.5625,
     });
 
-    expect(metrics.area).toBeCloseTo(4.81, 2); // el techo, correcto por casualidad
+    expect(metrics.area).toBeCloseTo(4.81, 2); // the ceiling, right by chance
     expect(persistedPhotoMetrics(metrics)).toEqual({ areaM2: null, volumeM3: null });
   });
 
   it('la estimación por cámara (≈) tampoco se guarda', () => {
     const metrics = estimateMeasurementMetrics({
-      ...franjaConQuiebre,
-      distances: { 'a:b': 0.65, 'b:c': 3.3, 'c:d': 4.1, 'd:e': 0.65 }, // falta un lado → sin techo
+      ...stripWithBreak,
+      distances: { 'a:b': 0.65, 'b:c': 3.3, 'c:d': 4.1, 'd:e': 0.65 }, // a side is missing → no ceiling
     });
 
     expect(metrics.areaFuente).toBe('estimada');

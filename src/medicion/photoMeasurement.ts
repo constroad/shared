@@ -1,4 +1,4 @@
-import { areaMaximaPorLados, areaPorTriangulacion, diagonalesNecesarias } from './areaMedida';
+import { maxAreaFromSides, areaByTriangulation, diagonalesNecesarias, type AreaMedida } from './areaMedida';
 import { areaEscuadra, type AreaEscuadra } from './areaEscuadra';
 import { arCaptureMetrics, normalizeArCapture, type ArCapture } from './arCapture';
 export type MeasurementMetricKey = 'surface' | 'perimeter' | 'volume' | 'height';
@@ -18,23 +18,23 @@ export interface MeasurementShape {
   points: MeasurementPoint[];
   isClosed: boolean;
   distances: Record<string, number | null | undefined>;
-  /** Largos de las diagonales del abanico desde el 1er vértice: `diag-0` va al
-   *  3er vértice, `diag-1` al 4to… Sin ellas el área de un cuadrilátero es
-   *  ambigua (ver `areaMedida.ts`). */
+  /** Lengths of the fan diagonals from the 1st vertex: `diag-0` goes to the
+   *  3rd vertex, `diag-1` to the 4th… Without them a quadrilateral's area is
+   *  ambiguous (see `areaMedida.ts`). */
   diagonals?: Record<string, number | null | undefined>;
   labelOffsets: Record<string, MeasurementLabelOffset | undefined>;
   /**
-   * Ancho/alto de la foto. Los puntos se guardan normalizados 0..1 en CADA eje
-   * por separado, así que sin este dato la geometría se calcula sobre una imagen
-   * cuadrada: en una foto de celular (9:16) un metro horizontal mide 1.78× menos
-   * que uno vertical, y de ahí salían escalas y largos estimados torcidos. Las
-   * mediciones viejas no lo tienen → 1, el comportamiento anterior.
+   * Photo width/height. Points are stored normalized 0..1 on EACH axis
+   * separately, so without this value the geometry is computed on a square
+   * image: on a phone photo (9:16) a horizontal meter measures 1.78× less than
+   * a vertical one, which skewed the estimated scales and lengths. Old
+   * measurements lack it → 1, the previous behavior.
    */
   imageAspect?: number;
   /**
-   * Modo A ESCUADRA: el usuario afirma que las esquinas son de 90°. Con eso los
-   * lados determinan el polígono sin diagonales (`areaEscuadra.ts`). Solo se
-   * guarda cuando es `true`, para no cambiar la firma de las mediciones viejas.
+   * A ESCUADRA mode: the user states that the corners are 90°. With that the
+   * sides determine the polygon without diagonals (`areaEscuadra.ts`). Stored
+   * only when `true`, so old measurements keep their signature.
    */
   aEscuadra?: boolean;
   height: number | null;
@@ -57,38 +57,38 @@ export interface MeasurementEdge {
 }
 
 /**
- * De dónde salió el número, que es lo que decide si se puede facturar:
- * - `medida`: de los largos y diagonales con wincha, por Herón. **Exacta.**
- * - `escuadra`: de los largos, bajo la premisa de esquinas a 90° que activó el
- *   usuario. Exacta si la premisa es cierta; el cierre la verifica.
- * - `maximo`: los lados están medidos pero falta la diagonal, así que el área
- *   no queda determinada. Se muestra el TECHO geométrico (`≤`), que también sale
- *   de la wincha y nunca miente por arriba.
- * - `estimada`: no alcanza para ninguna de las dos y se cae a la escala en
- *   píxeles, que la perspectiva distorsiona (se muestra con `≈`).
- * - `ar+wincha`: la planta del AR del APK con su escala fijada por la wincha. **Exacta.**
- * - `ar`: la planta del AR sin wincha; el SLAM deriva 1–5 %, así que es estimada (`≈`).
+ * Where the number came from, which decides whether it can be billed:
+ * - `medida`: from the tape lengths and diagonals, by Heron. **Exact.**
+ * - `escuadra`: from the lengths, under the 90° corner premise the user turned
+ *   on. Exact if the premise holds; the closure checks it.
+ * - `maximo`: the sides are measured but the diagonal is missing, so the area
+ *   is not determined. The geometric CEILING (`≤`) is shown; it also comes from
+ *   the tape and never errs on the high side.
+ * - `estimada`: there is not enough for either, so it falls back to the pixel
+ *   scale, which perspective distorts (shown with `≈`).
+ * - `ar+wincha`: the APK's AR plan with its scale fixed by the tape. **Exact.**
+ * - `ar`: the AR plan without the tape; SLAM drifts 1–5 %, so it is an estimate (`≈`).
  */
 export type AreaFuente = 'medida' | 'escuadra' | 'maximo' | 'estimada' | 'ar+wincha' | 'ar';
 
 export interface MeasurementMetrics {
   area: number | null;
   areaFuente: AreaFuente | null;
-  /** Techo geométrico de los lados medidos. Ninguna área mostrada lo supera. */
+  /** Geometric ceiling of the measured sides. No displayed area exceeds it. */
   areaMaxima: number | null;
-  /** Los largos cargados no cierran: alguna medida está mal tipeada. */
+  /** The entered lengths do not close: some measurement is mistyped. */
   diagonalesIncoherentes: boolean;
-  /** Resultado del modo a escuadra; `null` si no está activo o la forma no cierra. */
+  /** Result of the a escuadra mode; `null` if it is off or the shape is not closed. */
   escuadra: AreaEscuadra | null;
   perimeter: number | null;
-  /** `false` si algún lado no se midió y su largo lo puso la cámara. */
+  /** `false` if some side was not measured and the camera set its length. */
   perimetroMedido: boolean;
   volume: number | null;
   scale: number | null;
   height: number | null;
 }
 
-/** Cómo se relaciona el número mostrado con la realidad. */
+/** How the displayed number relates to reality. */
 export const relacionArea = (fuente: AreaFuente | null): '=' | '≤' | '≈' =>
   fuente === 'maximo' ? '≤' : fuente === 'estimada' || fuente === 'ar' ? '≈' : '=';
 
@@ -154,11 +154,8 @@ export const calculateThicknessDifferenceM = (
 export const buildEdgeId = (startPointId: string, endPointId: string) =>
   `${startPointId}:${endPointId}`;
 
-export const normalizeMeasurementShape = (input?: Partial<MeasurementShape> | null): MeasurementShape => {
-  const next = createDefaultMeasurementShape();
-
-  const rawPoints = Array.isArray(input?.points) ? input?.points : [];
-  next.points = rawPoints
+const normalizePoints = (rawPoints: MeasurementPoint[] | undefined): MeasurementPoint[] =>
+  (Array.isArray(rawPoints) ? rawPoints : [])
     .filter((point): point is MeasurementPoint => Boolean(point?.id))
     .map((point) => ({
       id: String(point.id),
@@ -166,29 +163,20 @@ export const normalizeMeasurementShape = (input?: Partial<MeasurementShape> | nu
       y: Number.isFinite(Number(point.y)) ? Number(point.y) : 0,
     }));
 
-  next.isClosed = Boolean(input?.isClosed) && next.points.length >= 3;
-
-  const rawDistances = input?.distances ?? {};
-  next.distances = Object.entries(rawDistances).reduce<Record<string, number>>((acc, [edgeId, rawValue]) => {
-    const value = normalizeNumber(rawValue);
-    if (value !== null) {
-      acc[edgeId] = value;
-    }
-    return acc;
-  }, {});
-
-  // Las diagonales se normalizan igual que los lados: sin ellas el área de un
-  // cuadrilátero es ambigua, así que un valor basura tiene que desaparecer, no
-  // colarse como medida.
-  const rawDiagonals = input?.diagonals ?? {};
-  next.diagonals = Object.entries(rawDiagonals).reduce<Record<string, number>>((acc, [id, rawValue]) => {
+/**
+ * Keeps only the valid positive lengths. Diagonals go through it like the sides:
+ * without them a quadrilateral's area is ambiguous, so a garbage value has to
+ * disappear, not slip in as a measurement.
+ */
+const normalizeLengths = (rawLengths: Record<string, unknown> | undefined): Record<string, number> =>
+  Object.entries(rawLengths ?? {}).reduce<Record<string, number>>((acc, [id, rawValue]) => {
     const value = normalizeNumber(rawValue);
     if (value !== null) acc[id] = value;
     return acc;
   }, {});
 
-  const rawLabelOffsets = input?.labelOffsets ?? {};
-  next.labelOffsets = Object.entries(rawLabelOffsets).reduce<Record<string, MeasurementLabelOffset>>((acc, [edgeId, rawValue]) => {
+const normalizeLabelOffsets = (rawLabelOffsets: Record<string, unknown> | undefined): Record<string, MeasurementLabelOffset> =>
+  Object.entries(rawLabelOffsets ?? {}).reduce<Record<string, MeasurementLabelOffset>>((acc, [edgeId, rawValue]) => {
     if (!rawValue || typeof rawValue !== 'object') return acc;
     const offset = rawValue as Partial<MeasurementLabelOffset>;
     const x = Number(offset.x);
@@ -202,33 +190,49 @@ export const normalizeMeasurementShape = (input?: Partial<MeasurementShape> | nu
     return acc;
   }, {});
 
+/** Copies the thickness readings that parse; a missing one stays absent. */
+const applyThicknessReadings = (target: MeasurementShape, input?: Partial<MeasurementShape> | null): void => {
+  const requested = normalizeNonNegativeNumber(input?.requestedThicknessCm);
+  const measured = normalizeNonNegativeNumber(input?.actualThicknessCm);
+  const heightDifference = normalizeSignedNumber(input?.heightDifferenceM);
+  if (requested !== null) target.requestedThicknessCm = requested;
+  if (measured !== null) target.actualThicknessCm = measured;
+  if (heightDifference !== null) target.heightDifferenceM = heightDifference;
+};
+
+const normalizeVisibleMetrics = (
+  raw: Partial<Record<MeasurementMetricKey, boolean>> | undefined
+): Record<MeasurementMetricKey, boolean> => ({
+  surface: raw?.surface ?? DEFAULT_VISIBLE_METRICS.surface,
+  perimeter: raw?.perimeter ?? DEFAULT_VISIBLE_METRICS.perimeter,
+  volume: raw?.volume ?? DEFAULT_VISIBLE_METRICS.volume,
+  height: raw?.height ?? DEFAULT_VISIBLE_METRICS.height,
+});
+
+export const normalizeMeasurementShape = (input?: Partial<MeasurementShape> | null): MeasurementShape => {
+  const shape = createDefaultMeasurementShape();
+  shape.points = normalizePoints(input?.points);
+  shape.isClosed = Boolean(input?.isClosed) && shape.points.length >= 3;
+  shape.distances = normalizeLengths(input?.distances);
+  shape.diagonals = normalizeLengths(input?.diagonals);
+  shape.labelOffsets = normalizeLabelOffsets(input?.labelOffsets);
+
   const imageAspect = normalizeNumber(input?.imageAspect);
-  if (imageAspect !== null) next.imageAspect = imageAspect;
-  if (input?.aEscuadra === true) next.aEscuadra = true;
+  if (imageAspect !== null) shape.imageAspect = imageAspect;
+  if (input?.aEscuadra === true) shape.aEscuadra = true;
 
-  next.height = normalizeNumber(input?.height);
-  const requestedThicknessCm = normalizeNonNegativeNumber(input?.requestedThicknessCm);
-  const actualThicknessCm = normalizeNonNegativeNumber(input?.actualThicknessCm);
-  const heightDifferenceM = normalizeSignedNumber(input?.heightDifferenceM);
-  if (requestedThicknessCm !== null) next.requestedThicknessCm = requestedThicknessCm;
-  if (actualThicknessCm !== null) next.actualThicknessCm = actualThicknessCm;
-  if (heightDifferenceM !== null) next.heightDifferenceM = heightDifferenceM;
+  shape.height = normalizeNumber(input?.height);
+  applyThicknessReadings(shape, input);
   const ar = normalizeArCapture(input?.ar);
-  if (ar) next.ar = ar;
-  next.visibleMetrics = {
-    surface: input?.visibleMetrics?.surface ?? DEFAULT_VISIBLE_METRICS.surface,
-    perimeter: input?.visibleMetrics?.perimeter ?? DEFAULT_VISIBLE_METRICS.perimeter,
-    volume: input?.visibleMetrics?.volume ?? DEFAULT_VISIBLE_METRICS.volume,
-    height: input?.visibleMetrics?.height ?? DEFAULT_VISIBLE_METRICS.height,
-  };
-
-  return next;
+  if (ar) shape.ar = ar;
+  shape.visibleMetrics = normalizeVisibleMetrics(input?.visibleMetrics);
+  return shape;
 };
 
 /**
- * Toda la geometría se hace en "unidades de alto de foto": x se multiplica por
- * el aspecto para que un paso horizontal y uno vertical midan lo mismo. Sin esto
- * la imagen se trata como cuadrada y las distancias salen anisotrópicas.
+ * All geometry is done in "photo height units": x is multiplied by the aspect
+ * so a horizontal and a vertical step measure the same. Without this the image
+ * is treated as square and distances come out anisotropic.
  */
 const getPixelLength = (start: MeasurementPoint, end: MeasurementPoint, aspect: number) =>
   Math.hypot((end.x - start.x) * aspect, end.y - start.y);
@@ -369,142 +373,136 @@ const arMeasurementMetrics = (capture: ArCapture, fallbackHeight: number | null)
   };
 };
 
-export const estimateMeasurementMetrics = (input?: Partial<MeasurementShape> | null): MeasurementMetrics => {
-  const shape = normalizeMeasurementShape(input);
-  const volumeHeight = shape.heightDifferenceM ?? shape.height;
-  if (shape.ar) return arMeasurementMetrics(shape.ar, volumeHeight);
-  const aspect = shapeAspect(shape);
-  const edges = buildMeasurementEdges(shape);
+const emptyMetrics = (height: number | null): MeasurementMetrics => ({
+  area: null,
+  areaFuente: null,
+  areaMaxima: null,
+  diagonalesIncoherentes: false,
+  escuadra: null,
+  perimeter: null,
+  perimetroMedido: false,
+  volume: null,
+  scale: null,
+  height,
+});
 
-  if (edges.length === 0) {
-    return {
-      area: null,
-      areaFuente: null,
-      areaMaxima: null,
-      diagonalesIncoherentes: false,
-      escuadra: null,
-      perimeter: null,
-      perimetroMedido: false,
-      volume: null,
-      scale: null,
-      height: volumeHeight,
-    };
-  }
-
+/** Average meters per pixel over the edges whose length was measured. */
+const averageScale = (edges: MeasurementEdge[]): number | null => {
   const resolvedScales = edges
     .filter((edge) => edge.length !== null && edge.pixelLength > 0)
     .map((edge) => (edge.length as number) / edge.pixelLength);
-  const scale = resolvedScales.length > 0
+  return resolvedScales.length > 0
     ? resolvedScales.reduce((sum, current) => sum + current, 0) / resolvedScales.length
     : null;
+};
 
-  const perimetroMedido = edges.every((edge) => edge.length !== null);
-  const perimeter = scale === null
+const resolvedPerimeter = (edges: MeasurementEdge[], scale: number | null): number | null =>
+  scale === null
     ? null
     : edges.reduce((sum, edge) => {
         const resolvedLength = edge.length ?? edge.pixelLength * scale;
         return sum + resolvedLength;
       }, 0);
 
-  // El área (y el volumen) se calculan con ≥3 puntos: la fórmula del área ya
-  // cierra el contorno (último→primer punto), así que el operador ve la superficie
-  // SIN tener que pulsar "Cerrar forma" (era el motivo de "S = -"). El refinamiento
-  // por largos ingresados (`adjustedArea`) sí requiere el contorno cerrado.
-  const canComputeArea = shape.points.length >= 3;
-  // El aspecto entra una vez: estirar x por el aspecto multiplica el área por él.
-  const projectedPixelArea = canComputeArea
-    ? Math.abs(calculateSignedArea(shape.points)) * aspect
-    : 0;
-  const projectedArea = scale === null || !canComputeArea
-    ? null
-    : projectedPixelArea * scale * scale;
+/**
+ * The camera estimate. It at least respects the entered lengths (adjusted
+ * polygon, closed shapes only); the projected area applies ONE average scale to
+ * the whole photo and in perspective goes off by a factor of 3 (05/09/2026:
+ * 746 m² over a ceiling of 245). It is the last resort, never the preferred
+ * one: it used to take the MAXIMUM of the two, which is picking the worst.
+ *
+ * The projected area needs only ≥3 points: the area formula already closes the
+ * outline (last→first point), so the operator sees the surface WITHOUT pressing
+ * "Cerrar forma" (that was the reason for "S = -").
+ */
+const cameraEstimate = (shape: MeasurementShape, edges: MeasurementEdge[], scale: number | null, aspect: number): number | null => {
+  if (scale === null) return null;
   const adjustedPolygon = shape.isClosed ? reconstructAdjustedPolygon(edges, scale, aspect) : null;
-  const adjustedArea = !shape.isClosed || !adjustedPolygon
-    ? null
-    : Math.abs(calculateSignedAreaFromCoordinates(adjustedPolygon));
-  // **El área MEDIDA gana siempre.** Sale de los largos con wincha por Herón:
-  // es exacta y no pasa por la cámara. Las de abajo estiman con una escala en
-  // píxeles única para toda la foto, que la perspectiva distorsiona — de ahí que
-  // el número saliera "recontra impreciso" (José, 01/09/2026).
-  const lados = edges.map((edge) => edge.length);
-  const medida = shape.isClosed
-    ? areaPorTriangulacion(lados, diagonalLengths(shape))
-    : { estado: 'faltan-datos' as const, area: null };
+  if (adjustedPolygon) return Math.abs(calculateSignedAreaFromCoordinates(adjustedPolygon));
+  if (shape.points.length < 3) return null;
+  // The aspect enters once: stretching x by the aspect multiplies the area by it.
+  return Math.abs(calculateSignedArea(shape.points)) * aspect * scale * scale;
+};
 
-  // Techo geométrico de los lados medidos: ningún polígono con esos largos
-  // encierra más. Es el que impide que vuelva a salir un número imposible.
-  const areaMaxima = shape.isClosed ? areaMaximaPorLados(lados) : null;
+const boundByCeiling = (estimate: number | null, ceiling: number | null): number | null => {
+  if (estimate === null) return null;
+  return ceiling === null ? estimate : Math.min(estimate, ceiling);
+};
 
-  // La estimación por cámara respeta al menos los largos cargados
-  // (`adjustedArea`); `projectedArea` aplica UNA escala promedio a toda la foto
-  // y en perspectiva se va por un factor de 3 (05/09/2026: 746 m² sobre un techo
-  // de 245). Es el último recurso, nunca el preferido: antes se tomaba el MÁXIMO
-  // de las dos, que es justo elegir la peor.
-  const estimada = adjustedArea ?? projectedArea;
-  const estimadaAcotada = estimada === null
-    ? null
-    : areaMaxima === null
-      ? estimada
-      : Math.min(estimada, areaMaxima);
+interface AreaCandidates {
+  measured: AreaMedida;
+  escuadra: number | null;
+  ceiling: number | null;
+  estimate: number | null;
+}
 
-  // A escuadra: esquinas a 90° afirmadas por el usuario. Los lados bastan y el
-  // cierre de la poligonal verifica la premisa (incidente Globofast, 30/09/2026).
+/** Order: measured with diagonals, measured a escuadra, the ceiling, and only last the camera. */
+const pickArea = (candidates: AreaCandidates): { area: number | null; areaFuente: AreaFuente | null } => {
+  if (candidates.measured.estado === 'medida') return { area: candidates.measured.area, areaFuente: 'medida' };
+  if (candidates.escuadra !== null) return { area: candidates.escuadra, areaFuente: 'escuadra' };
+  if (candidates.ceiling !== null) return { area: candidates.ceiling, areaFuente: 'maximo' };
+  return { area: candidates.estimate, areaFuente: candidates.estimate === null ? null : 'estimada' };
+};
+
+export const estimateMeasurementMetrics = (input?: Partial<MeasurementShape> | null): MeasurementMetrics => {
+  const shape = normalizeMeasurementShape(input);
+  const volumeHeight = shape.heightDifferenceM ?? shape.height;
+  if (shape.ar) return arMeasurementMetrics(shape.ar, volumeHeight);
+  const edges = buildMeasurementEdges(shape);
+  if (edges.length === 0) return emptyMetrics(volumeHeight);
+
+  const aspect = shapeAspect(shape);
+  const scale = averageScale(edges);
+  // **The MEASURED area always wins.** It comes from the tape lengths by Heron:
+  // it is exact and never goes through the camera. The estimates use a single
+  // pixel scale for the whole photo, which perspective distorts; hence the
+  // number came out "recontra impreciso" (José, 01/09/2026).
+  const sides = edges.map((edge) => edge.length);
+  const measured: AreaMedida = shape.isClosed
+    ? areaByTriangulation(sides, diagonalLengths(shape))
+    : { estado: 'faltan-datos', area: null };
+  // Geometric ceiling of the measured sides: no polygon with those lengths
+  // encloses more. It is what stops an impossible number from showing again.
+  const areaMaxima = shape.isClosed ? maxAreaFromSides(sides) : null;
+  // A escuadra: 90° corners stated by the user. The sides are enough and the
+  // traverse closure checks the premise (Globofast incident, 30/09/2026).
   const escuadra = shape.aEscuadra && shape.isClosed
-    ? areaEscuadra({ points: shape.points, lados, aspect })
+    ? areaEscuadra({ points: shape.points, lados: sides, aspect })
     : null;
-  const areaEscuadraOk = escuadra?.estado === 'medida' ? escuadra.area : null;
-
-  // Orden: lo medido con diagonales, lo medido a escuadra, el techo, y sólo al
-  // final la cámara.
-  const area = medida.estado === 'medida'
-    ? medida.area
-    : areaEscuadraOk !== null
-      ? areaEscuadraOk
-      : areaMaxima !== null
-        ? areaMaxima
-        : estimadaAcotada;
-  const areaFuente: AreaFuente | null =
-    medida.estado === 'medida'
-      ? 'medida'
-      : areaEscuadraOk !== null
-        ? 'escuadra'
-        : areaMaxima !== null
-          ? 'maximo'
-          : area === null
-            ? null
-            : 'estimada';
-
-  const volume = area !== null && volumeHeight !== null ? area * volumeHeight : null;
+  const { area, areaFuente } = pickArea({
+    measured,
+    escuadra: escuadra?.estado === 'medida' ? escuadra.area : null,
+    ceiling: areaMaxima,
+    estimate: boundByCeiling(cameraEstimate(shape, edges, scale, aspect), areaMaxima),
+  });
 
   return {
     area,
     areaFuente,
     areaMaxima,
-    // Largos que no cierran: se avisa. Callarlo dejaría pasar por buena un área
-    // sacada de medidas imposibles.
-    diagonalesIncoherentes: medida.estado === 'incoherente',
+    // Lengths that do not close are flagged. Hiding it would pass off an area
+    // drawn from impossible measurements as good.
+    diagonalesIncoherentes: measured.estado === 'incoherente',
     escuadra,
-    perimeter,
-    perimetroMedido,
-    volume,
+    perimeter: resolvedPerimeter(edges, scale),
+    perimetroMedido: edges.every((edge) => edge.length !== null),
+    volume: area !== null && volumeHeight !== null ? area * volumeHeight : null,
     scale,
     height: volumeHeight,
   };
 };
 
 /**
- * El área/volumen GUARDADOS de una foto, acotados por lo que sus propios lados
- * permiten.
+ * A photo's STORED area/volume, bounded by what its own sides allow.
  *
- * Cada foto guarda `areaM2`/`volumeM3` calculados en el momento de subirla, y el
- * cuadro de metrado del informe los SUMA. Los informes que se capturaron antes
- * del 05/09/2026 tienen ahí números imposibles (745 m² sobre un techo de 245) y
- * un PDF viejo se contradiría a sí mismo: la foto muestra `S ≤ 245.22` y el pie
- * dice 745.00.
+ * Each photo stores `areaM2`/`volumeM3` computed when it was uploaded, and the
+ * report's quantities table SUMS them. Reports captured before 05/09/2026 hold
+ * impossible numbers there (745 m² over a ceiling of 245) and an old PDF would
+ * contradict itself: the photo shows `S ≤ 245.22` and the footer says 745.00.
  *
- * Se acota, no se recalcula: el campo es EDITABLE en el canvas, así que un valor
- * corregido a mano —que siempre queda por debajo del techo— no se toca. Esto sólo
- * puede BAJAR un número, y sólo cuando es geométricamente imposible.
+ * It is bounded, not recomputed: the field is EDITABLE on the canvas, so a value
+ * corrected by hand (always below the ceiling) is left alone. This can only
+ * LOWER a number, and only when it is geometrically impossible.
  */
 export const boundedPhotoArea = (photo: {
   areaM2?: number | null;
@@ -516,7 +514,7 @@ export const boundedPhotoArea = (photo: {
   return areaMaxima !== null && stored > areaMaxima ? areaMaxima : stored;
 };
 
-/** Igual que `boundedPhotoArea`, con el mismo recorte aplicado al volumen. */
+/** Same as `boundedPhotoArea`, with the same cut applied to the volume. */
 export const boundedPhotoVolume = (photo: {
   areaM2?: number | null;
   volumeM3?: number | null;
@@ -527,13 +525,13 @@ export const boundedPhotoVolume = (photo: {
   if (stored === null || !photo.measurement) return stored;
   const acotada = boundedPhotoArea(photo);
   if (acotada === null || acotada === photo.areaM2) return stored;
-  // El volumen es área × espesor: si el área se recortó, el volumen se recorta
-  // en la misma proporción (conserva el espesor, que sí se midió).
+  // Volume is area × thickness: if the area was cut, the volume is cut in the
+  // same proportion (it keeps the thickness, which was measured).
   const factor = acotada / (photo.areaM2 as number);
   return Number.isFinite(factor) && factor > 0 ? stored * factor : stored;
 };
 
-/** Diagonales del abanico, en el orden que espera `areaPorTriangulacion`. */
+/** Fan diagonals, in the order `areaByTriangulation` expects. */
 export const diagonalLengths = (shape: MeasurementShape): Array<number | null> => {
   const necesarias = diagonalesNecesarias(shape.points.length);
   if (!necesarias) return [];
@@ -542,5 +540,5 @@ export const diagonalLengths = (shape: MeasurementShape): Array<number | null> =
   );
 };
 
-/** `diag-0` es la diagonal del 1er vértice al 3ro, `diag-1` al 4to, etc. */
+/** `diag-0` is the diagonal from the 1st vertex to the 3rd, `diag-1` to the 4th, etc. */
 export const buildDiagonalId = (index: number): string => `diag-${index}`;

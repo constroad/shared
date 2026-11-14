@@ -1,42 +1,44 @@
 /**
- * Área de un polígono a partir de los largos MEDIDOS con wincha. Motor PURO.
+ * Area of a polygon from the lengths MEASURED with a tape. PURE engine.
  *
- * **Existe porque el área de la foto era imprecisa por construcción
- * (01/09/2026).** El método anterior saca una ÚNICA escala promedio (metros por
- * píxel) y la aplica a toda la imagen. Eso sólo vale si la superficie está
- * paralela al sensor: los bacheos se fotografían en ángulo contra el pavimento y
- * en perspectiva el borde cercano tiene muchos más píxeles por metro que el
- * lejano. Ninguna escala única corrige eso.
+ * **It exists because the photo area was imprecise by construction
+ * (01/09/2026).** The previous method derives a SINGLE average scale (meters per
+ * pixel) and applies it to the whole image. That only holds if the surface is
+ * parallel to the sensor: patches are photographed at an angle to the pavement,
+ * and in perspective the near edge has far more pixels per meter than the far
+ * one. No single scale fixes that.
  *
- * **Por qué NO alcanza una homografía.** Es lo primero que uno prueba, y no
- * cierra: una homografía queda determinada por 4 correspondencias, así que las
- * 4 esquinas marcadas en la foto encajan con CUALQUIER cuadrilátero del piso —
- * no aporta ninguna restricción nueva. El problema no es la proyección sino la
- * geometría: **cuatro lados no determinan un cuadrilátero**. Es articulado, como
- * una tijera; un triángulo sí queda determinado por sus tres lados. Falta un
- * dato, y con la wincha en la mano ese dato cuesta cinco segundos: la DIAGONAL.
+ * **Why a homography is NOT enough.** It is the first thing one tries, and it
+ * does not work: a homography is determined by 4 correspondences, so the 4
+ * corners marked on the photo fit ANY quadrilateral on the floor; it adds no
+ * new constraint. The problem is not the projection but the geometry: **four
+ * sides do not determine a quadrilateral**. It is hinged, like scissors; a
+ * triangle IS determined by its three sides. One datum is missing, and with the
+ * tape in hand it costs five seconds: the DIAGONAL.
  *
- * Con las diagonales el polígono se parte en triángulos y el área sale por
- * Herón: **exacta, sin perspectiva y sin cámara**. La foto queda para lo que
- * sirve — mostrar dónde y qué forma tenía.
+ * With the diagonals the polygon splits into triangles and the area comes from
+ * Heron: **exact, with no perspective and no camera**. The photo is left for
+ * what it is good at: showing where it was and what shape it had.
  */
 
-export type EstadoAreaMedida = 'medida' | 'faltan-datos' | 'incoherente';
+export type MeasuredAreaStatus = 'medida' | 'faltan-datos' | 'incoherente';
 
 export type AreaMedida = {
-  estado: EstadoAreaMedida;
-  /** m². `null` salvo que el estado sea `medida`. */
+  estado: MeasuredAreaStatus;
+  /** m². `null` unless the status is `medida`. */
   area: number | null;
 };
 
 const FALTAN: AreaMedida = { estado: 'faltan-datos', area: null };
 const INCOHERENTE: AreaMedida = { estado: 'incoherente', area: null };
+/** Bisection steps for the circumradius: enough to reach the last bit of a double. */
+const BISECTION_STEPS = 200;
 
 /**
- * Cuántas diagonales hacen falta para triangular un polígono de `n` lados.
+ * How many diagonals it takes to triangulate a polygon with `n` sides.
  *
- * Un abanico desde el primer vértice lo parte en `n-2` triángulos y necesita
- * `n-3` diagonales: el triángulo ninguna, el cuadrilátero una.
+ * A fan from the first vertex splits it into `n-2` triangles and needs `n-3`
+ * diagonals: none for a triangle, one for a quadrilateral.
  */
 export const diagonalesNecesarias = (lados: number): number | null =>
   lados >= 3 ? lados - 3 : null;
@@ -45,78 +47,68 @@ const esMedidaValida = (valor: unknown): valor is number =>
   typeof valor === 'number' && Number.isFinite(valor) && valor > 0;
 
 /**
- * Herón en su forma numéricamente estable (Kahan): con lados muy dispares, la
- * fórmula del semiperímetro pierde precisión y puede dar la raíz de un negativo
- * por redondeo en un triángulo que sí es válido.
+ * Heron in its numerically stable form (Kahan): with very uneven sides, the
+ * semiperimeter formula loses precision and, through rounding, can take the
+ * square root of a negative on a triangle that is valid.
  */
 const areaTriangulo = (ladoA: number, ladoB: number, ladoC: number): number | null => {
   const [c, b, a] = [ladoA, ladoB, ladoC].sort((x, y) => x - y);
-  // Desigualdad triangular: si el lado mayor supera a los otros dos juntos, esos
-  // tres largos no cierran ningún triángulo.
+  // Triangle inequality: if the longest side exceeds the other two together,
+  // those three lengths close no triangle.
   if (c - (a - b) <= 0) return null;
   const producto = (a + (b + c)) * (c - (a - b)) * (c + (a - b)) * (a + (b - c));
   return producto <= 0 ? null : Math.sqrt(producto) / 4;
 };
 
 /**
- * Área por triangulación en abanico desde el primer vértice.
+ * MAXIMUM area those sides can enclose: **the geometric ceiling**.
  *
- * `lados[i]` = largo del lado que va del vértice `i` al `i+1` (el último cierra
- * contra el primero). `diagonales[k]` = largo del vértice 0 al vértice `k+2`.
+ * **It exists because of 05/09/2026.** A photo of a parking lot with sides
+ * 9.05 / 52.70 / 2.70 / 46.40 showed «S = 745.00 m²» and «V = 73.76 m³». With
+ * those four sides NO quadrilateral reaches 246 m²: the number was impossible,
+ * not imprecise, and that quantity is added to the table of the additional area
+ * report. It came from the camera estimate, which on a perspective photo
+ * measures scales that differ 42× between the near and the far side.
  *
- * Devuelve `incoherente` —y no un número— cuando los largos no cierran ningún
- * triángulo. Un área plausible sacada de medidas imposibles es peor que ninguna:
- * es exactamente el modo de falla del que venimos.
+ * Among all polygons with the same sides, **the one with the largest area is
+ * the cyclic one** (inscribed in a circle); for n=4 it is Brahmagupta. Since the
+ * sides come from the tape and not from the camera, this ceiling is a measured
+ * fact: any area above it is wrong, wherever it comes from.
+ *
+ * `null` if a side is missing or if the lengths close no polygon (the longest
+ * ≥ the sum of the others).
  */
-/**
- * Área MÁXIMA que pueden encerrar esos lados: **el techo geométrico**.
- *
- * **Existe por el 05/09/2026.** Una foto de un estacionamiento con lados
- * 9.05 / 52.70 / 2.70 / 46.40 mostró «S = 745.00 m²» y «V = 73.76 m³». Con esos
- * cuatro lados NINGÚN cuadrilátero llega a 246 m²: el número era imposible, no
- * impreciso, y ese metrado se suma al cuadro del informe de área adicional. Lo
- * había producido la estimación por cámara, que en una foto en perspectiva mide
- * escalas que difieren 42× entre el lado cercano y el lejano.
- *
- * Entre todos los polígonos con los mismos lados, **el de área máxima es el
- * cíclico** (el que se inscribe en una circunferencia) — para n=4 es
- * Brahmagupta. Como los lados salen de la wincha y no de la cámara, este techo
- * es un hecho medido: cualquier área por encima está mal, venga de donde venga.
- *
- * `null` si falta algún lado o si los largos no cierran ningún polígono (el
- * mayor ≥ la suma de los otros).
- */
-export const areaMaximaPorLados = (lados: Array<number | null | undefined>): number | null => {
+export const maxAreaFromSides = (lados: Array<number | null | undefined>): number | null => {
   if (lados.length < 3 || !lados.every(esMedidaValida)) return null;
   const ls = lados as number[];
 
   const iMayor = ls.reduce((mejor, lado, i) => (lado > ls[mejor] ? i : mejor), 0);
   const mayor = ls[iMayor];
   const resto = ls.reduce((suma, lado) => suma + lado, 0) - mayor;
-  // Desigualdad poligonal: sin ella no hay polígono, y por lo tanto no hay techo.
+  // Polygon inequality: without it there is no polygon, and so no ceiling.
   if (mayor >= resto) return null;
 
   if (ls.length === 3) return areaTriangulo(ls[0], ls[1], ls[2]);
 
-  // Ángulo central que subtiende un lado en la circunferencia de radio R.
+  // Central angle a side subtends on the circle of radius R.
   const angulo = (lado: number, radio: number) => 2 * Math.asin(Math.min(1, lado / (2 * radio)));
 
-  // El radio se despeja numéricamente: los ángulos centrales tienen que sumar
-  // una vuelta. Si con el radio mínimo ya no llegan a 2π, el centro cae FUERA
-  // del polígono y el lado mayor pasa a restar en vez de sumar.
-  const radioMinimo = mayor / 2;
-  const centroFuera = ls.reduce((suma, lado) => suma + angulo(lado, radioMinimo), 0) < 2 * Math.PI;
+  // The radius is solved numerically: the central angles must add up to one
+  // revolution. If at the minimum radius they already fall short of 2π, the
+  // center lies OUTSIDE the polygon and the longest side subtracts instead of adding.
+  const minRadius = mayor / 2;
+  const centroFuera = ls.reduce((suma, lado) => suma + angulo(lado, minRadius), 0) < 2 * Math.PI;
   const desbalance = centroFuera
     ? (radio: number) =>
         2 * angulo(mayor, radio) - ls.reduce((suma, lado) => suma + angulo(lado, radio), 0)
     : (radio: number) => ls.reduce((suma, lado) => suma + angulo(lado, radio), 0) - 2 * Math.PI;
 
-  // `desbalance` es positivo en el radio mínimo y negativo en el perímetro:
-  // bisección sobre ese intervalo. 200 pasos son gratis y dejan el radio exacto
-  // hasta el último bit del double.
-  let bajo = radioMinimo;
+  // `desbalance` is positive at the minimum radius and negative at the
+  // perimeter: bisection over that interval. 200 steps are free and leave the
+  // radius exact down to the last bit of the double.
+  let bajo = minRadius;
   let alto = ls.reduce((suma, lado) => suma + lado, 0);
-  for (let paso = 0; paso < 200; paso += 1) {
+  for (let step = 0; step < BISECTION_STEPS; step += 1) {
     const medio = (bajo + alto) / 2;
     if (desbalance(medio) > 0) bajo = medio;
     else alto = medio;
@@ -131,7 +123,17 @@ export const areaMaximaPorLados = (lados: Array<number | null | undefined>): num
   return Number.isFinite(area) && area > 0 ? area : null;
 };
 
-export const areaPorTriangulacion = (
+/**
+ * Area by fan triangulation from the first vertex.
+ *
+ * `lados[i]` = length of the side from vertex `i` to `i+1` (the last one closes
+ * against the first). `diagonales[k]` = length from vertex 0 to vertex `k+2`.
+ *
+ * Returns `incoherente`, not a number, when the lengths close no triangle. A
+ * plausible area drawn from impossible measurements is worse than none: it is
+ * exactly the failure mode we came from.
+ */
+export const areaByTriangulation = (
   lados: Array<number | null | undefined>,
   diagonales: Array<number | null | undefined>
 ): AreaMedida => {
@@ -147,9 +149,9 @@ export const areaPorTriangulacion = (
   const ladosOk = lados as number[];
   const diagOk = diagonalesUsadas as number[];
 
-  // Abanico: el triángulo k usa el lado k, la diagonal que entra y la que sale.
-  // La primera "diagonal que entra" es el lado 0; la última "que sale" es el
-  // último lado, el que cierra el polígono contra el vértice inicial.
+  // Fan: triangle k uses side k, the incoming diagonal and the outgoing one.
+  // The first "incoming diagonal" is side 0; the last "outgoing" one is the
+  // last side, the one that closes the polygon against the starting vertex.
   let total = 0;
   for (let k = 0; k < n - 2; k += 1) {
     const entra = k === 0 ? ladosOk[0] : diagOk[k - 1];

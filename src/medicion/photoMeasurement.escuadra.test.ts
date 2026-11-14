@@ -1,14 +1,14 @@
 import { estimateMeasurementMetrics, relacionArea } from './photoMeasurement';
 /**
- * El modo A ESCUADRA dentro del motor de métricas (30/09/2026).
+ * The A ESCUADRA mode inside the metrics engine (30/09/2026).
  *
- * Orden de preferencia del área: diagonales (Herón, exacta sin premisa) →
- * a escuadra (exacta bajo la premisa de 90°, la activa el usuario) → techo →
- * cámara. Lo que sale «a escuadra» se guarda y se suma igual que lo medido.
+ * Area preference order: diagonals (Heron, exact with no premise) →
+ * a escuadra (exact under the 90° premise, turned on by the user) → ceiling →
+ * camera. What comes out «a escuadra» is stored and summed just like measured.
  */
 
 const p = (id: string, x: number, y: number) => ({ id, x, y });
-// La franja de Globofast vista desde arriba: quiebre colineal en c.
+// The Globofast strip seen from above: collinear break at c.
 const franja = {
   points: [p('a', 0.2, 0.2), p('b', 0.2, 0.4), p('c', 0.5, 0.4), p('d', 0.8, 0.4), p('e', 0.8, 0.2)],
   isClosed: true,

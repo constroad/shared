@@ -1,28 +1,28 @@
 /**
- * Qué m²/m³ de una medición se GUARDAN en la foto del informe.
+ * Which m²/m³ of a measurement are STORED on the report photo.
  *
- * Existe por el incidente Globofast (30/09/2026): «17.05 m² · 0.631 m³» en un
- * hueco de 4.81. El motor, sin diagonales, muestra el techo cíclico (S ≤) —
- * correcto como cota, y para un rectángulo igual a lo real — pero para una
- * franja con un quiebre se abre a 2–4× el área. Ese techo se guardaba como
- * `areaM2`, se multiplicaba por el espesor y se sumaba al cuadro de metrados.
+ * It exists because of the Globofast incident (30/09/2026): «17.05 m² · 0.631 m³»
+ * for a 4.81 hole. Without diagonals the engine shows the cyclic ceiling (S ≤),
+ * correct as a bound and equal to reality for a rectangle, but for a strip with
+ * a break it opens up to 2–4× the area. That ceiling was stored as `areaM2`,
+ * multiplied by the thickness and added to the quantities table.
  *
- * Los DOS puntos que persisten (diálogo del admin y editor de campo) pasan por
- * acá, y el contrato queda en un solo lugar: **solo lo medido se guarda**. El
- * techo (≤) y la estimación por cámara (≈) siguen en pantalla como guía.
+ * BOTH places that persist (the admin dialog and the field editor) go through
+ * here, so the contract lives in one place: **only what was measured is
+ * stored**. The ceiling (≤) and the camera estimate (≈) stay on screen as a guide.
  *
- * Tri-estado, porque el consumidor mergea sobre la foto guardada:
- * - `number`    → fijar.
- * - `null`      → LIMPIAR lo guardado. Hay forma dibujada pero no medida: el
- *                 número viejo (un techo, o un tecleo que la forma contradice)
- *                 no puede sobrevivir. Sin esto, re-medir una foto de Globofast
- *                 seguía dejando el 17.05.
- * - `undefined` → no tocar. Sin forma no hay opinión: el m² tecleado inline en
- *                 el IAA se conserva.
+ * Tri-state, because the consumer merges over the stored photo:
+ * - `number`    → set it.
+ * - `null`      → CLEAR what was stored. There is a drawn but unmeasured shape:
+ *                 the old number (a ceiling, or a typed value the shape
+ *                 contradicts) cannot survive. Without this, re-measuring a
+ *                 Globofast photo kept the 17.05.
+ * - `undefined` → leave it. Without a shape there is no opinion: the m² typed
+ *                 inline in the IAA is kept.
  */
 import type { AreaFuente, MeasurementMetrics } from './photoMeasurement';
 
-/** Lo medido con diagonales, a escuadra o con AR ajustado por la wincha son datos del informe. AR solo no. */
+/** Measured with diagonals, a escuadra, or AR fitted by the tape is report data. AR alone is not. */
 const FUENTES_QUE_SE_GUARDAN: ReadonlySet<AreaFuente> = new Set<AreaFuente>(['medida', 'escuadra', 'ar+wincha']);
 
 export type PersistedMetric = number | null | undefined;
@@ -33,8 +33,8 @@ export interface PersistedPhotoMetrics {
 }
 
 /**
- * Cuatro decimales, no los dos que se imprimen: un parche de 0.30 m² a dos
- * decimales ya lleva ±1.7 % de redondeo. El cuadro redondea al mostrar.
+ * Four decimals, not the two that get printed: a 0.30 m² patch at two decimals
+ * already carries ±1.7 % rounding. The table rounds when it displays.
  */
 const DECIMALES_GUARDADOS = 4;
 const round = (value: number, decimals: number): number => {
@@ -51,12 +51,12 @@ export const persistedPhotoMetrics = (metrics: MeasurementMetrics): PersistedPho
   }
   return {
     areaM2: round(metrics.area, DECIMALES_GUARDADOS),
-    // Área medida sin espesor: el m³ viejo saldría de OTRA área. Se limpia.
+    // Measured area without thickness: the old m³ would come from ANOTHER area. Clear it.
     volumeM3: metrics.volume === null ? null : round(metrics.volume, DECIMALES_GUARDADOS),
   };
 };
 
-/** Aplica el tri-estado sobre el valor guardado en la foto. */
+/** Applies the tri-state over the value stored on the photo. */
 export const applyPersistedMetric = (next: PersistedMetric, current: number | undefined): number | undefined => {
   if (next === undefined) return current;
   if (next === null) return undefined;
