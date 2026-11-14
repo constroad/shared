@@ -68,6 +68,9 @@
       ],
       "cubicar": [
         "dist/cubicar/index.d.ts"
+      ],
+      "medicion": [
+        "dist/medicion/index.d.ts"
       ]
     }
   },
