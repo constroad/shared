@@ -126,3 +126,52 @@ describe('CubicageEditor', () => {
     expect(screen.getByAltText('Volquete cuadrado con sus cotas').getAttribute('src')).toBe('https://inframaq.test/img/cubicar/volquete-cuadrado.png');
   });
 });
+
+describe('CubicageEditor dispatch height', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  it('tells the app the height once the requested volume settles, not on every keystroke', () => {
+    // Arrange
+    const onDispatchHeight = jest.fn();
+    render(<Editor unit={UNIT} onDispatchHeight={onDispatchHeight} />);
+
+    // Act
+    type('Quiero despachar (m³)', '5');
+    type('Quiero despachar (m³)', '6');
+    jest.advanceTimersByTime(799);
+    const early = onDispatchHeight.mock.calls.length;
+    jest.advanceTimersByTime(1);
+
+    // Assert
+    expect(early).toBe(0);
+    expect(onDispatchHeight).toHaveBeenCalledTimes(1);
+    expect(onDispatchHeight).toHaveBeenCalledWith({ plate: 'B4X-836', shape: 'Cuadrado', cubicator: 'Ana', m3: 12, requestedM3: 6, heightToDispatchCm: 75, heightFromTopCm: 75 });
+  });
+
+  it('says nothing for a volume the truck cannot hold', () => {
+    // Arrange
+    const onDispatchHeight = jest.fn();
+    render(<Editor unit={UNIT} onDispatchHeight={onDispatchHeight} />);
+
+    // Act
+    type('Quiero despachar (m³)', '30');
+    jest.advanceTimersByTime(1000);
+
+    // Assert
+    expect(onDispatchHeight).not.toHaveBeenCalled();
+  });
+
+  it('signs with who came from Lilachat', () => {
+    // Arrange
+    const onDispatchHeight = jest.fn();
+    render(<Editor unit={UNIT} responsible="Luis" onDispatchHeight={onDispatchHeight} />);
+
+    // Act
+    type('Quiero despachar (m³)', '6');
+    jest.advanceTimersByTime(800);
+
+    // Assert
+    expect(onDispatchHeight).toHaveBeenCalledWith(expect.objectContaining({ cubicator: 'Luis' }));
+  });
+});

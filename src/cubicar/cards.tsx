@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { measureFieldsOf, type CubicageMeasureKey, type CubicageMeasures, type TruckShape } from '../flota/cubicage';
-import { dispatchCm, dispatchReference } from '../flota/dispatchHeights';
+import { dispatchCm, dispatchReference, type DispatchCm } from '../flota/dispatchHeights';
 import { drawingOf } from '../flota/shape';
 import { classes, drawingSrc, FIGURES, KICKER, useCubicarKit } from './kit';
 
@@ -145,9 +145,26 @@ export const MeasuresCard = ({ shape, measures, onType, m3 }: { shape: TruckShap
   );
 };
 
-export const DispatchCard = ({ shape, measures, m3, children }: { shape: TruckShape; measures: CubicageMeasures; m3: number; children?: ReactNode }) => {
+/** How long a typed volume has to stay before `onHeight` fires: once per calculation, not per keystroke. */
+export const DISPATCH_HEIGHT_SETTLE_MS = 800;
+
+const useSettledHeight = (height: DispatchCm | null, onHeight?: (height: DispatchCm) => void) => {
+  const key = height ? `${height.m3}|${height.loadCm}|${height.fromTopCm}` : '';
+  useEffect(() => {
+    if (!height || !onHeight) return undefined;
+    const timer = setTimeout(() => onHeight(height), DISPATCH_HEIGHT_SETTLE_MS);
+    return () => clearTimeout(timer);
+    // The key stands for the height: a new object with the same numbers is the same calculation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+};
+
+type DispatchCardProps = { shape: TruckShape; measures: CubicageMeasures; m3: number; onHeight?(height: DispatchCm): void; children?: ReactNode };
+
+export const DispatchCard = ({ shape, measures, m3, onHeight, children }: DispatchCardProps) => {
   const [requested, setRequested] = useState('');
   const height = Number(requested) <= m3 ? dispatchCm(shape, measures, Number(requested)) : null;
+  useSettledHeight(height, onHeight);
   const reference = dispatchReference(shape, measures, m3);
   const kit = useCubicarKit();
   const { Card, CardContent } = kit;

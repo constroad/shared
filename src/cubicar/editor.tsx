@@ -75,16 +75,29 @@ const PlateField = ({ value, locked, onChange }: { value: string; locked: boolea
   );
 };
 
+/** A dispatch height someone worked out on the form (Portal sends it as an alert). */
+export interface DispatchHeightCalculation {
+  plate: string;
+  shape: TruckShape;
+  cubicator: string;
+  m3: number;
+  requestedM3: number;
+  heightToDispatchCm: number;
+  heightFromTopCm: number;
+}
+
 export interface CubicageEditorProps {
   unit?: CubicarUnit;
   responsible?: string;
   saving: boolean;
   onSave(form: CubicarForm): void;
+  /** Fires once the requested volume settles into a height, not on every keystroke. */
+  onDispatchHeight?(calculation: DispatchHeightCalculation): void;
   picker?: ReactNode;
   notice?: ReactNode;
 }
 
-export const CubicageEditor = ({ unit, responsible, saving, onSave, picker, notice }: CubicageEditorProps) => {
+export const CubicageEditor = ({ unit, responsible, saving, onSave, onDispatchHeight, picker, notice }: CubicageEditorProps) => {
   const form = useUnitForm(unit);
   const { shape, plate, cubicator, measures, m3 } = form;
   return (
@@ -107,7 +120,14 @@ export const CubicageEditor = ({ unit, responsible, saving, onSave, picker, noti
         {shape ? (
           <div className="space-y-4 lg:sticky lg:top-4">
             {notice}
-            {m3 > 0 ? <DispatchCard shape={shape} measures={measures} m3={m3} /> : null}
+            {m3 > 0 ? (
+              <DispatchCard
+                shape={shape}
+                measures={measures}
+                m3={m3}
+                onHeight={onDispatchHeight ? (height) => onDispatchHeight({ plate, shape, cubicator: responsible ?? cubicator, m3, requestedM3: height.m3, heightToDispatchCm: height.loadCm, heightFromTopCm: height.fromTopCm }) : undefined}
+              />
+            ) : null}
             <SaveBar disabled={saving || m3 <= 0} saving={saving} onSave={() => onSave({ plate, cubicator, shape, measures })} unit={unit} />
           </div>
         ) : null}
