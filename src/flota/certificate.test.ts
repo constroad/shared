@@ -63,3 +63,13 @@ describe('certificateViewOf', () => {
     expect(certificateViewOf(CONCAVE, OPTIONS)).not.toHaveProperty('measuredBy');
   });
 });
+
+describe('certificateViewOf with only the measured values', () => {
+  it('works out the deduced measures, the parts and the figure itself', () => {
+    const view = certificateViewOf({ ...CONCAVE, measures: { totalWidth: '2.4', totalLength: '5.2', totalHeight: '1.5', squareHeight: '0.9', centralConcaveWidth: '1.2' } }, OPTIONS);
+
+    expect(view.measures.find((measure) => measure.code === 'A4')?.meters).toBeCloseTo(0.6);
+    expect(view.parts.map((part) => part.m3)).toEqual([11.23, 3.74, 2.94]);
+    expect(Number(view.figure.leftConcaveWidth)).toBeCloseTo(0.6);
+  });
+});

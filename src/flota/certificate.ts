@@ -1,4 +1,4 @@
-import { measureFieldsOf, type CubicageMeasures, type TruckShape } from './cubicage';
+import { measureFieldsOf, measuresOf, type CubicageMeasures, type TruckShape } from './cubicage';
 import { dispatchReference, type DispatchCm } from './dispatchHeights';
 import { SHAPE_LABEL } from './shape';
 
@@ -28,6 +28,10 @@ export interface CubicageCertificateIssuer {
   name: string;
   address: string;
   logoUrl: string;
+  /** RUC, printed under the name when the company has it. */
+  taxId?: string;
+  /** The company's brand color (its own data, e.g. `#0f766e`): the accent of the sheet. */
+  accent?: string;
 }
 
 export interface CubicageCertificateView {
@@ -44,6 +48,8 @@ export interface CubicageCertificateView {
   /** Absolute: the print sheet loads without a base address, so a relative image breaks. */
   figureUrl: string;
   measures: CubicageCertificateMeasure[];
+  /** The measures that count for the shape, for drawing the hopper with its dimensions. */
+  figure: CubicageMeasures;
   parts: CubicageCertificatePart[];
   m3: number;
   dispatch: DispatchCm[];
@@ -103,7 +109,10 @@ const previousOf = (previous: CubicageCertificateInput['previous']) =>
 export const certificateFigureUrl = (origin: string, shape: TruckShape): string =>
   `${origin.replace(/\/+$/, '')}/img/cubicar/volquete-${shape === 'Concavo' ? 'concavo' : 'cuadrado'}.png`;
 
-export const certificateViewOf = (input: CubicageCertificateInput, options: CubicageCertificateOptions): CubicageCertificateView => ({
+/** The deduced measures are worked out here too: a stored row may carry only the measured ones. */
+export const certificateViewOf = (input: CubicageCertificateInput, options: CubicageCertificateOptions): CubicageCertificateView => {
+  const measures = measuresOf(input.shape, input.measures);
+  return {
   number: input.number,
   plate: input.plate,
   shape: input.shape,
@@ -114,8 +123,10 @@ export const certificateViewOf = (input: CubicageCertificateInput, options: Cubi
   issuer: options.issuer,
   ...(options.measuredBy ? { measuredBy: options.measuredBy } : {}),
   figureUrl: certificateFigureUrl(options.origin, input.shape),
-  measures: measuresView(input.shape, input.measures),
-  parts: input.shape === 'Concavo' ? concaveParts(input.measures) : squareParts(input.measures),
+  measures: measuresView(input.shape, measures),
+  figure: measures,
+  parts: input.shape === 'Concavo' ? concaveParts(measures) : squareParts(measures),
   m3: input.m3,
-  dispatch: dispatchReference(input.shape, input.measures, input.m3),
-});
+  dispatch: dispatchReference(input.shape, measures, input.m3),
+  };
+};
