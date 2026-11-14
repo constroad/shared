@@ -37,6 +37,10 @@
     "./cubicar": {
       "types": "./dist/cubicar/index.d.ts",
       "default": "./dist/cubicar/index.js"
+    },
+    "./medicion": {
+      "types": "./dist/medicion/index.d.ts",
+      "default": "./dist/medicion/index.js"
     }
   },
   "typesVersions": {

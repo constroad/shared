@@ -11,6 +11,7 @@ no un repo nuevo.
 | `@constroad/shared/obra` | Mapa de obra: geometría de calles, avance por trabajo y por día, métricas de tramo, colores, franja por calles, lo que ve el cliente, descargas por unidad, KMZ sin dependencias el motor puro del editor de calles (cosido de tiles, toque, pegado OSRM y su confianza, capas del mapa) y el día de colocación de fotos y unidades (día de Lima, número de la unidad dentro de su día, un color por día) | Portal (admin y reporte del cliente) y Lilachat (web y APK) |
 | `@constroad/shared/kardex` | Motor del kardex: saldo en orden de línea de tiempo, foto de existencias por material y sede, el ingreso que acepta una recepción, la reubicación entre sedes, el ajuste por conteo y la salida de un pedido; fechas de llegada en hora de Lima | Portal e Inframaq |
 | `@constroad/shared/materiales` | Materiales: reporte de stock de agregados (estado, barra de llenado, reposición), etiquetas que distinguen dos opciones con el mismo nombre, el filtro de transportista y cantera, y las reglas puras de un movimiento de stock y de una recepción | Portal e Inframaq |
+| `@constroad/shared/medicion` | Medir un área en el piso: la planta AR ajustada con la wincha (una escala para el drift; la wincha manda en el lado que discrepa), su área con el zapatero (sin contornos que se cruzan) y el espesor con n lecturas y su ± | Portal (el server recalcula) y el APK de Lilachat |
 
 ## Usarlo en una app
 
