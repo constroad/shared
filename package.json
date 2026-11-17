@@ -2,7 +2,7 @@
   "name": "@constroad/shared",
   "version": "0.19.2",
   "private": true,
-  "description": "Código de dominio compartido entre las apps de ConstRoad: planilla, consumos, flota, mapa de obra e informes de campo. Puro y sin dependencias; solo `./cubicar` trae React (peer).",
+  "description": "Código de dominio compartido entre las apps de ConstRoad: planilla, consumos, flota, mapa de obra informes de campo y el correo de Google por empresa. Puro y sin dependencias; solo `./cubicar` trae React (peer).",
   "license": "UNLICENSED",
   "exports": {
     "./planilla": {
@@ -41,6 +41,10 @@
     "./medicion": {
       "types": "./dist/medicion/index.d.ts",
       "default": "./dist/medicion/index.js"
+    },
+    "./google-mail": {
+      "types": "./dist/google-mail/index.d.ts",
+      "default": "./dist/google-mail/index.js"
     }
   },
   "typesVersions": {
@@ -71,6 +75,9 @@
       ],
       "medicion": [
         "dist/medicion/index.d.ts"
+      ],
+      "google-mail": [
+        "dist/google-mail/index.d.ts"
       ]
     }
   },

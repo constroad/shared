@@ -12,6 +12,7 @@ no un repo nuevo.
 | `@constroad/shared/kardex` | Motor del kardex: saldo en orden de línea de tiempo, foto de existencias por material y sede, el ingreso que acepta una recepción, la reubicación entre sedes, el ajuste por conteo y la salida de un pedido; fechas de llegada en hora de Lima | Portal e Inframaq |
 | `@constroad/shared/materiales` | Materiales: reporte de stock de agregados (estado, barra de llenado, reposición), etiquetas que distinguen dos opciones con el mismo nombre, el filtro de transportista y cantera, y las reglas puras de un movimiento de stock y de una recepción | Portal e Inframaq |
 | `@constroad/shared/medicion` | Medir un área en el piso: la planta AR ajustada con la wincha (una escala para el drift; la wincha manda en el lado que discrepa), su área con el zapatero (sin contornos que se cruzan) y el espesor con n lecturas y su ± | Portal (el server recalcula) y el APK de Lilachat |
+| `@constroad/shared/google-mail` | «Continuar con Google» para el correo de una empresa: `state` firmado que ata el regreso a una empresa, URL de autorización (solo `gmail.send` y la dirección), canje del código, refresco y revocación, el correo con su PDF enviado por la API de Gmail, y el texto y el logo del botón. Lado servidor, con `fetch` y Web Crypto. Cada app guarda su secreto de cliente y el refresh token sellado por empresa | Portal (Integraciones) y Dali |
 
 ## Usarlo en una app
 
