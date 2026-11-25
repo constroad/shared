@@ -13,6 +13,7 @@ no un repo nuevo.
 | `@constroad/shared/materiales` | Materiales: reporte de stock de agregados (estado, barra de llenado, reposición), etiquetas que distinguen dos opciones con el mismo nombre, el filtro de transportista y cantera, y las reglas puras de un movimiento de stock y de una recepción | Portal e Inframaq |
 | `@constroad/shared/medicion` | Medir un área en el piso: la planta AR ajustada con la wincha (una escala para el drift; la wincha manda en el lado que discrepa), su área con el zapatero (sin contornos que se cruzan) y el espesor con n lecturas y su ± | Portal (el server recalcula) y el APK de Lilachat |
 | `@constroad/shared/google-mail` | «Continuar con Google» para el correo de una empresa: `state` firmado que ata el regreso a una empresa, URL de autorización (solo `gmail.send` y la dirección), canje del código, refresco y revocación, el correo con su PDF enviado por la API de Gmail, y el texto y el logo del botón. Lado servidor, con `fetch` y Web Crypto. Cada app guarda su secreto de cliente y el refresh token sellado por empresa | Portal (Integraciones) y Dali |
+| `@constroad/shared/drive-share` | Drive compartido sin descarga: la regla de quién descarga (`canDownload`, `canZip`, `zipExclusions`, `isLinkActive`, `effectiveDownload`; enlace nuevo = descarga bloqueada, enlace viejo sin el campo = permitida), el token firmado corto de página, descarga y lectura protegida (`signShareToken`/`verifyShareToken`, Web Crypto), el texto de la marca de agua y los topes del render (escala, páginas, concurrencia, caché). Contrato en la sección «Drive compartido» | Portal e Inframaq firman; lila e Inframaq verifican |
 
 ## Usarlo en una app
 
@@ -46,3 +47,35 @@ entre apps cada hora. Sube solo si cambia un número de planilla, junto con su t
    todas o ninguna.
 4. Si una app sale roja, el script deja todas como estaban y el tag ya
    publicado. Arreglas esa app y corres `scripts/publish.sh X.Y.Z --apps-only`.
+
+## Drive compartido (`./drive-share`, v0.21.0)
+
+Pedido de José del 25/11/2026: un enlace puede prohibir la descarga «de verdad».
+El original nunca sale del servidor; viajan páginas rasterizadas con marca de agua.
+
+- **Política** (`ShareLinkPolicy`): `download` (por defecto del enlace),
+  `downloadOverrides` (`{ [mediaId]: boolean }`, gana sobre el defecto en los dos
+  sentidos), `requireIdentity` (OTP antes de ver; la identidad va a la marca),
+  `expiresAt`, `revoked`. `defaultPolicyForNewLink()` = descarga **bloqueada** e
+  identificación apagada. Un enlace que ya existía, sin el campo, **descarga**
+  (`normalizeSharePolicy`). Un vencimiento ilegible cuenta como vencido.
+- **Token**: `base64url(JSON).base64url(HMAC-SHA256)`. La llave es
+  `HMAC-SHA256(secreto, "constroad/drive-share/v1")`, no el secreto: así un token
+  de Drive y un JWT con el mismo secreto (`LILA_APP_JWT_SECRET`) nunca se validan
+  uno como otro. `iat`/`exp` en segundos. Scopes y vida por defecto / máxima:
+  `drive-share-page` 300/600 s, `drive-share-download` 120/300 s,
+  `drive-share-file` 900/3600 s. Tolerancia de reloj: 30 s.
+  `verifyShareToken` no lanza: devuelve `{ ok: false, reason }`
+  (`malformed`, `bad_signature`, `wrong_scope`, `expired`, `not_yet_valid`,
+  `bad_claims`) y revalida las claims aunque la firma sea buena.
+- **Claims**: `companyId` (`[A-Za-z0-9_-]{1,64}`), `path` relativo a la raíz de la
+  empresa (sin `/` inicial, sin segmentos vacíos, `.`, `..` ni ocultos, sin `\`),
+  `linkId?`, `mediaId?`; página: `page?` (1…300), `scale?` (0,5…2), `watermark`
+  (≤120); descarga: `filename?`.
+- **Topes del render** (lila e Inframaq usan los mismos): `MAX_PAGE_SCALE` 2,
+  `MAX_PAGES_PER_DOCUMENT` 300, `MAX_CONCURRENT_RENDERS` 2, `MAX_QUEUED_RENDERS` 8,
+  `RENDER_QUEUE_WAIT_MS` 4000 (después 429 con `Retry-After` 2), caché en disco sin
+  marca con `PAGE_CACHE_TTL_MS` 7 días y `PAGE_CACHE_MAX_BYTES` 1 GiB,
+  `IMAGE_PREVIEW_MAX_PX` 1600, `PAGE_URLS_PER_REQUEST` 20.
+- **Marca de agua**: `watermarkText({ linkCode, viewer?, at })` →
+  «Enlace AB12CD · cliente@correo.com · 25/11/2026 14:05» (hora de Lima).
