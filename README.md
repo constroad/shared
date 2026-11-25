@@ -14,6 +14,7 @@ no un repo nuevo.
 | `@constroad/shared/medicion` | Medir un área en el piso: la planta AR ajustada con la wincha (una escala para el drift; la wincha manda en el lado que discrepa), su área con el zapatero (sin contornos que se cruzan) y el espesor con n lecturas y su ± | Portal (el server recalcula) y el APK de Lilachat |
 | `@constroad/shared/google-mail` | «Continuar con Google» para el correo de una empresa: `state` firmado que ata el regreso a una empresa, URL de autorización (solo `gmail.send` y la dirección), canje del código, refresco y revocación, el correo con su PDF enviado por la API de Gmail, y el texto y el logo del botón. Lado servidor, con `fetch` y Web Crypto. Cada app guarda su secreto de cliente y el refresh token sellado por empresa | Portal (Integraciones) y Dali |
 | `@constroad/shared/drive-share` | Drive compartido sin descarga: la regla de quién descarga (`canDownload`, `canZip`, `zipExclusions`, `isLinkActive`, `effectiveDownload`; enlace nuevo = descarga bloqueada, enlace viejo sin el campo = permitida), el token firmado corto de página, descarga y lectura protegida (`signShareToken`/`verifyShareToken`, Web Crypto), el texto de la marca de agua y los topes del render (escala, páginas, concurrencia, caché). Contrato en la sección «Drive compartido» | Portal e Inframaq firman; lila e Inframaq verifican |
+| `@constroad/shared/drive-viewer` | El visor del Drive en React: PDF (páginas con marca o el visor pdf.js de la app), imagen y video, con flechas, teclado, deslizar y zoom. Sin imports de app: React, `react-dom` (portal a `<body>`) y clases de Tailwind con los tokens de shadcn. Contrato en la sección «Visor del Drive» | Portal (enlace público e intranet) e Inframaq |
 
 ## Usarlo en una app
 
@@ -79,3 +80,58 @@ El original nunca sale del servidor; viajan páginas rasterizadas con marca de a
   `IMAGE_PREVIEW_MAX_PX` 1600, `PAGE_URLS_PER_REQUEST` 20.
 - **Marca de agua**: `watermarkText({ linkCode, viewer?, at })` →
   «Enlace AB12CD · cliente@correo.com · 25/11/2026 14:05» (hora de Lima).
+
+## Visor del Drive (`./drive-viewer`, v0.22.0)
+
+```tsx
+import { DriveViewer, type DriveViewerItem } from '@constroad/shared/drive-viewer';
+
+<DriveViewer items={items} currentId={openId} onNavigate={setOpenId} onClose={() => setOpenId(null)} />
+```
+
+**Dependencias:** `react` y `react-dom` ≥ 18 como peers opcionales (solo los pide quien
+importa `./drive-viewer` o `./cubicar`).
+
+**Tailwind:** el visor trae clases, no CSS. La app tiene que escanear el `dist` del paquete
+o esas clases no se generan:
+
+```js
+// tailwind.config.js
+content: [
+  // …lo de la app
+  './node_modules/@constroad/shared/dist/drive-viewer/**/*.js',
+],
+```
+
+Usa los tokens de shadcn (`bg-background`, `bg-card`, `border-border`, `text-foreground`,
+`text-muted-foreground`, `bg-muted`, `bg-primary`, `text-primary-foreground`, `ring-accent`):
+la app los define. Como el visor se monta en `document.body`, `surfaceClassName` lleva la
+clase que activa esos tokens y el modo (Portal: `"shadcn-surface dark"`).
+
+**Props (`DriveViewerProps`):**
+
+| Prop | Tipo | Qué hace |
+| --- | --- | --- |
+| `items` | `DriveViewerItem[]` | Los archivos de la carpeta, en orden |
+| `currentId` | `string \| null` | El abierto; `null` cierra el visor |
+| `onNavigate` | `(id) => void` | Flechas, teclado (← →) o deslizar al archivo vecino |
+| `onClose` | `() => void` | «Volver a la carpeta» o Escape |
+| `renderActions?` | `(item) => ReactNode` | Botones de la barra (descargar, imprimir…) |
+| `renderPdf?` | `(item) => ReactNode` | PDF descargable en el visor pdf.js de la app; sin esto, un `iframe` |
+| `renderBadge?` | `(item) => ReactNode` | Distintivo junto al nombre («Solo lectura») |
+| `labels?` | `Partial<DriveViewerLabels>` | Textos; por defecto `DEFAULT_LABELS` (español neutro) |
+| `surfaceClassName?` | `string` | Clase del contenedor en `<body>` (tokens y modo de la app) |
+
+**`DriveViewerItem`:** `id`, `name`, `kind` (`'pdf' \| 'image' \| 'video' \| 'none'`),
+`canDownload`, `src?` (el original o su URL firmada, si `canDownload`), `loadPages?`
+(sin descarga, PDF o imagen: `(from, { thumbs }) => Promise<{ pages, from, urls, expiresAt }>`,
+ventanas de `PAGE_URLS_PER_REQUEST` URLs firmadas que el visor renueva 30 s antes de vencer,
+sin polling), `loadStream?` (sin descarga, video: `() => Promise<{ url, watermark }>`; se pide
+de nuevo si el stream vence a mitad), `kicker?` (texto sobre el nombre, la carpeta).
+
+Sin descarga, las páginas se piden en modo CORS (`crossOrigin="anonymous"`) y el video va sin
+control de descarga ni picture-in-picture, bajo la marca en mosaico. Eso solo dificulta: lo que
+protege es que el original nunca llega al navegador (`./drive-share`).
+
+También exporta `DEFAULT_LABELS`, `ViewerButton` y `VIEWER_BUTTON` (la clase de los botones de
+la barra, 44 px), para que las acciones de la app se vean iguales.

@@ -2,7 +2,7 @@
   "name": "@constroad/shared",
   "version": "0.21.0",
   "private": true,
-  "description": "Código de dominio compartido entre las apps de ConstRoad: planilla, consumos, flota, mapa de obra informes de campo, el correo de Google por empresa y el Drive compartido sin descarga. Puro y sin dependencias; solo `./cubicar` trae React (peer).",
+  "description": "Código de dominio compartido entre las apps de ConstRoad: planilla, consumos, flota, mapa de obra informes de campo, el correo de Google por empresa, el Drive compartido sin descarga y su visor. Puro y sin dependencias; solo `./cubicar` y `./drive-viewer` traen React (peer).",
   "license": "UNLICENSED",
   "exports": {
     "./planilla": {
@@ -49,6 +49,10 @@
     "./drive-share": {
       "types": "./dist/drive-share/index.d.ts",
       "default": "./dist/drive-share/index.js"
+    },
+    "./drive-viewer": {
+      "types": "./dist/drive-viewer/index.d.ts",
+      "default": "./dist/drive-viewer/index.js"
     }
   },
   "typesVersions": {
@@ -85,6 +89,9 @@
       ],
       "drive-share": [
         "dist/drive-share/index.d.ts"
+      ],
+      "drive-viewer": [
+        "dist/drive-viewer/index.d.ts"
       ]
     }
   },
@@ -111,10 +118,14 @@
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "react": ">=18"
+    "react": ">=18",
+    "react-dom": ">=18"
   },
   "peerDependenciesMeta": {
     "react": {
+      "optional": true
+    },
+    "react-dom": {
       "optional": true
     }
   }
