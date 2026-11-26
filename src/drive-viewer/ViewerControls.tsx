@@ -25,9 +25,11 @@ type ToolbarProps = { name: string; kind: DriveViewerKind; kicker?: string; badg
 /**
  * The top bar: back, the company logo (desktop), what is open, then the tools. One bar from
  * `lg` (tablet landscape and desktop, Stitch dc02/dc03); on the phone the name wraps to two lines.
+ * Between `lg` and `xl` the gaps, the page field and the zoom value are narrower, so the file
+ * name keeps its width next to «Archivo n de N» without shrinking any 44 px target (dc02, 26/11/2026).
  */
 export const ViewerToolbar = ({ name, kind, kicker, badge, logo, labels, onClose, children }: ToolbarProps) => (
-  <header className="flex shrink-0 items-center gap-2 border-b border-border bg-card px-2 py-2 shadow-sm sm:gap-3 sm:px-4">
+  <header className="flex shrink-0 items-center gap-2 border-b border-border bg-card px-2 py-2 shadow-sm sm:gap-3 sm:px-4 lg:gap-2 lg:px-3 xl:gap-3 xl:px-4">
     <button type="button" onClick={onClose} aria-label={labels.back}
       className="inline-flex h-11 min-w-[44px] shrink-0 items-center justify-center gap-2 rounded-lg px-2 text-sm font-semibold text-foreground hover:bg-muted xl:border xl:border-border xl:bg-card xl:px-3 xl:shadow-sm">
       <ArrowLeftIcon />
@@ -47,7 +49,7 @@ export const ViewerToolbar = ({ name, kind, kicker, badge, logo, labels, onClose
   </header>
 );
 
-const FIT_BUTTON = 'inline-flex h-11 min-w-[44px] shrink-0 items-center justify-center gap-1 rounded-lg border border-border bg-card px-2 text-sm font-semibold text-foreground shadow-sm transition-[background-color,box-shadow] hover:shadow-md lg:gap-2 lg:px-3';
+const FIT_BUTTON = 'inline-flex h-11 min-w-[44px] shrink-0 items-center justify-center gap-1 rounded-lg border border-border bg-card px-2 text-sm font-semibold text-foreground shadow-sm transition-[background-color,box-shadow] hover:shadow-md lg:gap-2 xl:px-3';
 
 const zoomStep = (zoom: number, delta: -1 | 1): number => {
   const index = ZOOM_STEPS.indexOf(zoom as (typeof ZOOM_STEPS)[number]);
@@ -57,15 +59,16 @@ const zoomStep = (zoom: number, delta: -1 | 1): number => {
 /**
  * «− 100 % +» in one muted group with a 1 px border (Stitch dc02), then «Ajustar al ancho» from `xl` and «Ajustar»
  * below. Compact under `lg` so the phone row fits 390 px with its 44 px targets (Portal portal-premium-ui §2c).
+ * The group clips its buttons: at a 90 % zoom «+» overflowed by a pixel and hid the right border (dc02, 26/11/2026).
  */
 export const ZoomControls = ({ zoom, labels, onZoom }: { zoom: number; labels: DriveViewerLabels; onZoom: (zoom: number) => void }) => {
   const index = ZOOM_STEPS.indexOf(zoom as (typeof ZOOM_STEPS)[number]);
   return (
     <div className="flex shrink-0 items-center gap-1.5 lg:gap-2">
-      <div className="flex items-center rounded-lg border border-foreground/15 bg-muted">
-        <button type="button" className="flex h-11 w-11 items-center justify-center rounded-l-lg text-foreground disabled:opacity-40" aria-label={labels.zoomOut} disabled={index <= 0} onClick={() => onZoom(zoomStep(zoom, -1))}><MinusIcon /></button>
-        <span className="w-12 text-center font-mono text-[11px] font-semibold leading-[44px] tabular-nums text-foreground lg:w-14 lg:text-xs">{zoom} %</span>
-        <button type="button" className="flex h-11 w-11 items-center justify-center rounded-r-lg text-foreground disabled:opacity-40" aria-label={labels.zoomIn} disabled={index >= ZOOM_STEPS.length - 1} onClick={() => onZoom(zoomStep(zoom, 1))}><PlusIcon /></button>
+      <div className="flex shrink-0 items-center overflow-hidden rounded-lg border border-foreground/15 bg-muted">
+        <button type="button" className="flex h-11 w-11 items-center justify-center bg-transparent text-foreground disabled:opacity-40" aria-label={labels.zoomOut} disabled={index <= 0} onClick={() => onZoom(zoomStep(zoom, -1))}><MinusIcon /></button>
+        <span className="w-12 text-center font-mono text-[11px] font-semibold leading-[44px] tabular-nums text-foreground lg:text-xs xl:w-14">{zoom} %</span>
+        <button type="button" className="flex h-11 w-11 items-center justify-center bg-transparent text-foreground disabled:opacity-40" aria-label={labels.zoomIn} disabled={index >= ZOOM_STEPS.length - 1} onClick={() => onZoom(zoomStep(zoom, 1))}><PlusIcon /></button>
       </div>
       <button type="button" onClick={() => onZoom(100)} aria-label={labels.fit} className={FIT_BUTTON}>
         <FitIcon />
@@ -91,7 +94,7 @@ export const PageField = ({ pager, labels }: { pager: DriveViewerPager; labels: 
       <span>{labels.pageField}</span>
       <input type="number" inputMode="numeric" min={1} max={pager.pages} value={typed} aria-label={labels.pageField}
         onChange={(event) => setTyped(event.target.value)} onBlur={commit} onKeyDown={onKeyDown}
-        className="h-11 w-10 rounded-md border border-border bg-background text-center font-mono text-sm font-semibold tabular-nums text-foreground lg:w-12 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+        className="h-11 w-10 rounded-md border border-border bg-background text-center font-mono text-sm font-semibold tabular-nums text-foreground xl:w-12 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
       <span className="font-semibold tabular-nums text-foreground">{labels.pageOf(pager.pages)}</span>
     </label>
   );

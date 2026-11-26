@@ -54,7 +54,7 @@ const ViewerBody = ({ item, labels, zoom, onZoom, onPager, renderPdf }: BodyProp
 const BarTools = ({ item, pager, zoom, labels, onZoom }: { item: DriveViewerItem; pager: DriveViewerPager | null; zoom: number; labels: DriveViewerLabels; onZoom: (zoom: number) => void }) => {
   if (item.kind !== 'image' && !isPaged(item)) return null;
   return (
-    <div className="hidden shrink-0 items-center gap-3 lg:flex">
+    <div className="hidden shrink-0 items-center gap-2 lg:flex xl:gap-3">
       {pager && <><PageField pager={pager} labels={labels} /><BarDivider name="tools" className="" /></>}
       <ZoomControls zoom={zoom} labels={labels} onZoom={onZoom} />
     </div>
