@@ -17,6 +17,8 @@ export interface ShareLinkPolicy {
   requireIdentity?: boolean;
   /** The public pages (the expired-link page included) offer WhatsApp and a call to the company. Missing = off. */
   showContact?: boolean;
+  /** Pages and images carry the diagonal «Enlace · fecha» mark. Missing = legacy = on; new links = off (José, 26/11/2026). */
+  watermark?: boolean;
   /** Absent or null = never expires. Date, ISO string or epoch milliseconds. */
   expiresAt?: Date | string | number | null;
   revoked?: boolean;

@@ -49,7 +49,7 @@ entre apps cada hora. Sube solo si cambia un número de planilla, junto con su t
 4. Si una app sale roja, el script deja todas como estaban y el tag ya
    publicado. Arreglas esa app y corres `scripts/publish.sh X.Y.Z --apps-only`.
 
-## Drive compartido (`./drive-share`, v0.21.0; ZIP, impresión y contacto desde v0.23.0)
+## Drive compartido (`./drive-share`, v0.21.0; ZIP, impresión y contacto desde v0.23.0; marca de agua opcional desde v0.24.0)
 
 Pedido de José del 25/11/2026: un enlace puede prohibir la descarga «de verdad».
 El original nunca sale del servidor; viajan páginas rasterizadas con marca de agua.
@@ -75,6 +75,13 @@ El original nunca sale del servidor; viajan páginas rasterizadas con marca de a
     descarga» y `showContact` falso. Las funciones leen así una política sin los
     campos, de modo que Inframaq conserva su comportamiento hasta migrar: para
     apagarlos, que guarde `zip: false` / `print: false` explícitos.
+- **Desde v0.24.0** (José, 26/11: «para los informes, contratos o cotizaciones no
+  debería verse así; que sea configurable») la política suma `watermark`.
+  - `canWatermark(link)` es `watermark !== false`: un enlace viejo sin el campo
+    sigue marcado; `defaultPolicyForNewLink()` lo deja **apagado**.
+  - Con la marca apagada, quien firma manda `watermark: ""` en el token de página
+    y lila sirve la página sin marca. La descarga sigue bloqueada igual: la marca
+    solo disuade la captura de pantalla.
 - **Token**: `base64url(JSON).base64url(HMAC-SHA256)`. La llave es
   `HMAC-SHA256(secreto, "constroad/drive-share/v1")`, no el secreto: así un token
   de Drive y un JWT con el mismo secreto (`LILA_APP_JWT_SECRET`) nunca se validan

@@ -3,6 +3,7 @@ import {
   canDownload,
   canPrint,
   canShowContact,
+  canWatermark,
   canZip,
   defaultPolicyForNewLink,
   effectiveDownload,
@@ -133,7 +134,7 @@ describe('canZip and zipExclusions', () => {
   });
 });
 
-const LEGACY_DOWNLOADING = { download: true, downloadOverrides: {}, zip: true, print: true, requireIdentity: false, showContact: false };
+const LEGACY_DOWNLOADING = { download: true, downloadOverrides: {}, zip: true, print: true, requireIdentity: false, showContact: false, watermark: true };
 
 describe('normalizeSharePolicy', () => {
   it('turns a legacy permissions object into an explicit policy that downloads, zips and prints', () => {
@@ -143,16 +144,16 @@ describe('normalizeSharePolicy', () => {
   it('keeps an explicit refusal and only boolean overrides', () => {
     expect(
       normalizeSharePolicy({ download: false, downloadOverrides: { a: true, b: 'yes', c: false }, requireIdentity: true })
-    ).toEqual({ download: false, downloadOverrides: { a: true, c: false }, zip: true, print: true, requireIdentity: true, showContact: false });
+    ).toEqual({ download: false, downloadOverrides: { a: true, c: false }, zip: true, print: true, requireIdentity: true, showContact: false, watermark: true });
   });
 
   it('gives a legacy link that downloads nothing neither ZIP nor print', () => {
-    expect(normalizeSharePolicy({ download: false })).toEqual({ download: false, downloadOverrides: {}, zip: false, print: false, requireIdentity: false, showContact: false });
+    expect(normalizeSharePolicy({ download: false })).toEqual({ download: false, downloadOverrides: {}, zip: false, print: false, requireIdentity: false, showContact: false, watermark: true });
   });
 
   it('keeps the explicit toggles of a v0.23 link', () => {
     expect(normalizeSharePolicy({ download: true, zip: false, print: false, showContact: true })).toEqual({
-      download: true, downloadOverrides: {}, zip: false, print: false, requireIdentity: false, showContact: true,
+      download: true, downloadOverrides: {}, zip: false, print: false, requireIdentity: false, showContact: true, watermark: true,
     });
   });
 
@@ -192,6 +193,28 @@ describe('canPrint', () => {
   });
 });
 
+describe('canWatermark', () => {
+  it('marks the pages only when the toggle is on', () => {
+    expect(canWatermark({ watermark: true })).toBe(true);
+    expect(canWatermark({ watermark: false })).toBe(false);
+  });
+
+  it('keeps marking a legacy link without the field', () => {
+    expect(canWatermark({})).toBe(true);
+  });
+
+  it('leaves a new link unmarked', () => {
+    expect(canWatermark(defaultPolicyForNewLink())).toBe(false);
+  });
+});
+
+describe('normalizeSharePolicy · watermark', () => {
+  it('keeps an explicit watermark choice and ignores garbage', () => {
+    expect(normalizeSharePolicy({ download: false, watermark: false }).watermark).toBe(false);
+    expect(normalizeSharePolicy({ download: false, watermark: 'no' }).watermark).toBe(true);
+  });
+});
+
 describe('canShowContact', () => {
   it('shows the contact only when explicitly on', () => {
     expect(canShowContact({ showContact: true })).toBe(true);
@@ -219,7 +242,7 @@ describe('allowsSomeDownload', () => {
 
 describe('new links and identity', () => {
   it('creates new links with every capability off', () => {
-    expect(defaultPolicyForNewLink()).toEqual({ download: false, downloadOverrides: {}, zip: false, print: false, requireIdentity: false, showContact: false });
+    expect(defaultPolicyForNewLink()).toEqual({ download: false, downloadOverrides: {}, zip: false, print: false, requireIdentity: false, showContact: false, watermark: false });
   });
 
   it('a new link neither zips, prints nor shows the contact', () => {

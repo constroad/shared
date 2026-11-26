@@ -69,14 +69,17 @@ export function canPrint(link: ShareLinkPolicy, file: Pick<SharedFileRef, 'media
 /** WhatsApp and call buttons on the public pages, the expired-link page included: only when explicitly on. */
 export const canShowContact = (link: ShareLinkPolicy): boolean => link.showContact === true;
 
+/** The viewer pages carry the watermark: an explicit toggle, or on for a legacy link (it was always marked). */
+export const canWatermark = (link: ShareLinkPolicy): boolean => link.watermark !== false;
+
 /** mediaIds that must stay out of the ZIP. On an inactive link, all of them. */
 export function zipExclusions(link: ShareLinkPolicy, files: Pick<SharedFileRef, 'mediaId'>[], now: number = Date.now()): string[] {
   return files.filter((file) => !canDownload(link, file, now)).map((file) => file.mediaId);
 }
 
-/** Policy of a link created from now on: every capability off (download, ZIP, print, identification, contact). */
+/** Policy of a link created from now on: every capability off (download, ZIP, print, identification, contact, watermark). */
 export function defaultPolicyForNewLink(): ShareLinkPolicy {
-  return { download: false, downloadOverrides: {}, zip: false, print: false, requireIdentity: false, showContact: false };
+  return { download: false, downloadOverrides: {}, zip: false, print: false, requireIdentity: false, showContact: false, watermark: false };
 }
 
 const booleanOverrides = (raw: unknown): Record<string, boolean> => {
@@ -87,7 +90,7 @@ const booleanOverrides = (raw: unknown): Record<string, boolean> => {
 /**
  * Whatever is stored (a legacy `permissions` object included) as an explicit policy.
  * A legacy link keeps what it had: download allowed, and ZIP and print wherever
- * something downloads; the contact stays off.
+ * something downloads; the contact stays off; the watermark stays on.
  */
 export function normalizeSharePolicy(raw: unknown): ShareLinkPolicy {
   const source = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
@@ -101,6 +104,7 @@ export function normalizeSharePolicy(raw: unknown): ShareLinkPolicy {
     print: toggleOrLegacy(typeof source.print === 'boolean' ? source.print : undefined, base),
     requireIdentity: source.requireIdentity === true,
     showContact: source.showContact === true,
+    watermark: source.watermark !== false,
   };
 }
 
