@@ -1,5 +1,5 @@
-/** Stroke icons drawn inline: the viewer carries no icon library. */
-const Svg = ({ d, className = 'h-4 w-4' }: { d: string; className?: string }) => (
+/** Stroke icons drawn inline: the viewer carries no icon library. They never shrink beside a long text (dc02 lock, 26/11). */
+const Svg = ({ d, className = 'h-4 w-4 shrink-0' }: { d: string; className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
     <path d={d} />
   </svg>

@@ -62,7 +62,7 @@ export const ZoomControls = ({ zoom, labels, onZoom }: { zoom: number; labels: D
   const index = ZOOM_STEPS.indexOf(zoom as (typeof ZOOM_STEPS)[number]);
   return (
     <div className="flex shrink-0 items-center gap-1.5 lg:gap-2">
-      <div className="flex items-center rounded-lg border border-border bg-muted">
+      <div className="flex items-center rounded-lg border border-foreground/15 bg-muted">
         <button type="button" className="flex h-11 w-11 items-center justify-center rounded-l-lg text-foreground disabled:opacity-40" aria-label={labels.zoomOut} disabled={index <= 0} onClick={() => onZoom(zoomStep(zoom, -1))}><MinusIcon /></button>
         <span className="w-12 text-center font-mono text-[11px] font-semibold leading-[44px] tabular-nums text-foreground lg:w-14 lg:text-xs">{zoom} %</span>
         <button type="button" className="flex h-11 w-11 items-center justify-center rounded-r-lg text-foreground disabled:opacity-40" aria-label={labels.zoomIn} disabled={index >= ZOOM_STEPS.length - 1} onClick={() => onZoom(zoomStep(zoom, 1))}><PlusIcon /></button>
