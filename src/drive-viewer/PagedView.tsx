@@ -16,7 +16,7 @@ const PageImage = ({ page, url, zoom, onVisible, register }: { page: number; url
   const ref = useRef<HTMLDivElement | null>(null);
   useVisible(ref, onVisible);
   return (
-    <div ref={(node) => { ref.current = node; register(page, node); }} data-page={page} className="mx-auto overflow-hidden rounded-sm border border-border bg-card shadow-sm" style={{ width: `${zoom}%`, maxWidth: zoom <= 100 ? '56rem' : undefined }}>
+    <div ref={(node) => { ref.current = node; register(page, node); }} data-page={page} className="mx-auto overflow-hidden rounded-[4px] border border-border bg-card shadow-sm" style={{ width: `${zoom}%`, maxWidth: zoom <= 100 ? '56rem' : undefined }}>
       {url ? <img src={url} alt={`Página ${page}`} loading="lazy" draggable={false} referrerPolicy="no-referrer" crossOrigin="anonymous" onContextMenu={blockGesture} onDragStart={blockGesture} className="block h-auto w-full select-none" /> : <div className="aspect-[1/1.414] w-full animate-pulse bg-muted" />}
     </div>
   );
@@ -110,7 +110,7 @@ export const PagedView = ({ loader, labels, zoom, onZoom, multiPage, onPager }: 
   const showRail = main.pages > 1;
   return (
     <div className="flex min-h-0 flex-1 flex-col print:hidden" onContextMenu={blockGesture}>
-      <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-4 py-2 lg:hidden">
+      <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2 sm:px-4 lg:hidden">
         {main.pages > 0 ? <PageField pager={{ current, pages: main.pages, goTo }} labels={labels} /> : <span />}
         <ZoomControls zoom={zoom} labels={labels} onZoom={onZoom} />
       </div>

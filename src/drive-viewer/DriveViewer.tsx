@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode, type TouchEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { DEFAULT_LABELS } from './labels';
-import { FileNavigator, NoPreview, PageField, ViewerToolbar, ZoomControls } from './ViewerControls';
+import { BarDivider, FileNavigator, NoPreview, PageField, ViewerToolbar, ZoomControls } from './ViewerControls';
 import { ViewerActions } from './ViewerActions';
 import { ImageView, VideoView } from './MediaViews';
 import { PagedView } from './PagedView';
@@ -55,7 +55,7 @@ const BarTools = ({ item, pager, zoom, labels, onZoom }: { item: DriveViewerItem
   if (item.kind !== 'image' && !isPaged(item)) return null;
   return (
     <div className="hidden shrink-0 items-center gap-3 lg:flex">
-      {pager && <PageField pager={pager} labels={labels} />}
+      {pager && <><PageField pager={pager} labels={labels} /><BarDivider name="tools" className="" /></>}
       <ZoomControls zoom={zoom} labels={labels} onZoom={onZoom} />
     </div>
   );

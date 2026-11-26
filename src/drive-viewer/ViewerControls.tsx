@@ -15,6 +15,11 @@ const FileKindIcon = ({ kind }: { kind: DriveViewerKind }) => {
   return <span data-file-kind={kind} className="hidden shrink-0 text-muted-foreground lg:inline-flex"><Icon /></span>;
 };
 
+/** A 1 px divider of the desktop bar (Stitch dc02/dc03: after «Volver», after the logo, between page and zoom). */
+export const BarDivider = ({ name, className = 'hidden xl:block' }: { name: string; className?: string }) => (
+  <span data-bar-divider={name} className={cx('h-6 w-px shrink-0 bg-border', className)} aria-hidden="true" />
+);
+
 type ToolbarProps = { name: string; kind: DriveViewerKind; kicker?: string; badge?: ReactNode; logo?: ReactNode; labels: DriveViewerLabels; onClose: () => void; children?: ReactNode };
 
 /**
@@ -28,7 +33,8 @@ export const ViewerToolbar = ({ name, kind, kicker, badge, logo, labels, onClose
       <ArrowLeftIcon />
       <span className="hidden xl:inline">{labels.back}</span>
     </button>
-    {logo && <span className="hidden shrink-0 items-center gap-3 xl:flex">{logo}<span className="h-6 w-px bg-border" aria-hidden="true" /></span>}
+    <BarDivider name="back" />
+    {logo && <span className="hidden shrink-0 items-center gap-3 xl:flex">{logo}<BarDivider name="logo" /></span>}
     <div className="flex min-w-0 flex-1 items-center gap-2">
       <FileKindIcon kind={kind} />
       <div className="min-w-0">
@@ -41,26 +47,31 @@ export const ViewerToolbar = ({ name, kind, kicker, badge, logo, labels, onClose
   </header>
 );
 
+const FIT_BUTTON = 'inline-flex h-11 min-w-[44px] shrink-0 items-center justify-center gap-1 rounded-lg border border-border bg-card px-2 text-sm font-semibold text-foreground shadow-sm transition-[background-color,box-shadow] hover:shadow-md lg:gap-2 lg:px-3';
+
 const zoomStep = (zoom: number, delta: -1 | 1): number => {
   const index = ZOOM_STEPS.indexOf(zoom as (typeof ZOOM_STEPS)[number]);
   return ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, Math.max(0, index + delta))];
 };
 
-/** «− 100 % +» in one muted group, then «Ajustar al ancho» («Ajustar» on the phone). */
+/**
+ * «− 100 % +» in one muted group with a 1 px border (Stitch dc02), then «Ajustar al ancho» from `xl` and «Ajustar»
+ * below. Compact under `lg` so the phone row fits 390 px with its 44 px targets (Portal portal-premium-ui §2c).
+ */
 export const ZoomControls = ({ zoom, labels, onZoom }: { zoom: number; labels: DriveViewerLabels; onZoom: (zoom: number) => void }) => {
   const index = ZOOM_STEPS.indexOf(zoom as (typeof ZOOM_STEPS)[number]);
   return (
-    <div className="flex shrink-0 items-center gap-2">
+    <div className="flex shrink-0 items-center gap-1.5 lg:gap-2">
       <div className="flex items-center rounded-lg border border-border bg-muted">
         <button type="button" className="flex h-11 w-11 items-center justify-center rounded-l-lg text-foreground disabled:opacity-40" aria-label={labels.zoomOut} disabled={index <= 0} onClick={() => onZoom(zoomStep(zoom, -1))}><MinusIcon /></button>
-        <span className="w-14 border-x border-border bg-card text-center font-mono text-xs leading-[44px] tabular-nums text-foreground">{zoom} %</span>
+        <span className="w-12 text-center font-mono text-[11px] font-semibold leading-[44px] tabular-nums text-foreground lg:w-14 lg:text-xs">{zoom} %</span>
         <button type="button" className="flex h-11 w-11 items-center justify-center rounded-r-lg text-foreground disabled:opacity-40" aria-label={labels.zoomIn} disabled={index >= ZOOM_STEPS.length - 1} onClick={() => onZoom(zoomStep(zoom, 1))}><PlusIcon /></button>
       </div>
-      <ViewerButton onClick={() => onZoom(100)} aria-label={labels.fit}>
+      <button type="button" onClick={() => onZoom(100)} aria-label={labels.fit} className={FIT_BUTTON}>
         <FitIcon />
-        <span className="lg:hidden">{labels.fitShort}</span>
-        <span className="hidden lg:inline">{labels.fit}</span>
-      </ViewerButton>
+        <span className="text-[10px] font-bold uppercase tracking-tight lg:text-sm lg:font-semibold lg:normal-case lg:tracking-normal xl:hidden">{labels.fitShort}</span>
+        <span className="hidden xl:inline">{labels.fit}</span>
+      </button>
     </div>
   );
 };
@@ -76,11 +87,11 @@ export const PageField = ({ pager, labels }: { pager: DriveViewerPager; labels: 
   };
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => { if (event.key === 'Enter') commit(); };
   return (
-    <label className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
+    <label className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground lg:gap-2 lg:text-sm">
       <span>{labels.pageField}</span>
       <input type="number" inputMode="numeric" min={1} max={pager.pages} value={typed} aria-label={labels.pageField}
         onChange={(event) => setTyped(event.target.value)} onBlur={commit} onKeyDown={onKeyDown}
-        className="h-11 w-12 rounded-md border border-border bg-background text-center font-mono text-sm font-semibold tabular-nums text-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+        className="h-11 w-10 rounded-md border border-border bg-background text-center font-mono text-sm font-semibold tabular-nums text-foreground lg:w-12 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
       <span className="font-semibold tabular-nums text-foreground">{labels.pageOf(pager.pages)}</span>
     </label>
   );

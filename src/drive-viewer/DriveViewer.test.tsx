@@ -165,4 +165,11 @@ describe('formatFileSize', () => {
   ])('%p bytes read as %p', (bytes, text) => {
     expect(formatFileSize(bytes)).toBe(text);
   });
+
+  it('the desktop bar divides back | logo | file and page | zoom (Stitch dc02)', async () => {
+    renderViewer([pdfBlocked], 'p1', { logo: <span>Logo</span> });
+    await waitFor(() => expect(screen.getAllByRole('spinbutton', { name: 'Página' }).length).toBeGreaterThan(0));
+    const dividers = Array.from(document.body.querySelectorAll('header [data-bar-divider]')).map((node) => node.getAttribute('data-bar-divider'));
+    expect(dividers).toEqual(['back', 'logo', 'tools']);
+  });
 });
