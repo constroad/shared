@@ -49,7 +49,7 @@ entre apps cada hora. Sube solo si cambia un número de planilla, junto con su t
 4. Si una app sale roja, el script deja todas como estaban y el tag ya
    publicado. Arreglas esa app y corres `scripts/publish.sh X.Y.Z --apps-only`.
 
-## Drive compartido (`./drive-share`, v0.21.0)
+## Drive compartido (`./drive-share`, v0.21.0; ZIP, impresión y contacto desde v0.23.0)
 
 Pedido de José del 25/11/2026: un enlace puede prohibir la descarga «de verdad».
 El original nunca sale del servidor; viajan páginas rasterizadas con marca de agua.
@@ -60,6 +60,21 @@ El original nunca sale del servidor; viajan páginas rasterizadas con marca de a
   `expiresAt`, `revoked`. `defaultPolicyForNewLink()` = descarga **bloqueada** e
   identificación apagada. Un enlace que ya existía, sin el campo, **descarga**
   (`normalizeSharePolicy`). Un vencimiento ilegible cuenta como vencido.
+- **Desde v0.23.0** (pedido de José del 25/11: todo configurable) la política suma
+  `zip` (la carpeta en ZIP), `print` (imprimir) y `showContact` (botones de WhatsApp
+  y llamada en las páginas públicas, también en la de enlace vencido).
+  - `canZip` pide `zip` **y** algo descargable; los archivos sin descarga quedan
+    fuera (`zipExclusions`).
+  - `canPrint(link, file)` pide `print` **y** ese archivo descargable **y** el
+    enlace activo: imprimir necesita el original.
+  - `canShowContact(link)` es `showContact === true` y no mira el vencimiento.
+  - `allowsSomeDownload(link)`: el defecto descarga o alguna excepción lo hace.
+  - `sharedFileAccess` devuelve también `canPrint`.
+  - `defaultPolicyForNewLink()` deja **todo apagado**.
+  - Enlace viejo (sin los campos): `zip` y `print` valen «encendido donde algo
+    descarga» y `showContact` falso. Las funciones leen así una política sin los
+    campos, de modo que Inframaq conserva su comportamiento hasta migrar: para
+    apagarlos, que guarde `zip: false` / `print: false` explícitos.
 - **Token**: `base64url(JSON).base64url(HMAC-SHA256)`. La llave es
   `HMAC-SHA256(secreto, "constroad/drive-share/v1")`, no el secreto: así un token
   de Drive y un JWT con el mismo secreto (`LILA_APP_JWT_SECRET`) nunca se validan
@@ -81,7 +96,7 @@ El original nunca sale del servidor; viajan páginas rasterizadas con marca de a
 - **Marca de agua**: `watermarkText({ linkCode, viewer?, at })` →
   «Enlace AB12CD · cliente@correo.com · 25/11/2026 14:05» (hora de Lima).
 
-## Visor del Drive (`./drive-viewer`, v0.22.0)
+## Visor del Drive (`./drive-viewer`, v0.22.0; barra única y acciones propias desde v0.23.0)
 
 ```tsx
 import { DriveViewer, type DriveViewerItem } from '@constroad/shared/drive-viewer';
@@ -116,7 +131,10 @@ clase que activa esos tokens y el modo (Portal: `"shadcn-surface dark"`).
 | `currentId` | `string \| null` | El abierto; `null` cierra el visor |
 | `onNavigate` | `(id) => void` | Flechas, teclado (← →) o deslizar al archivo vecino |
 | `onClose` | `() => void` | «Volver a la carpeta» o Escape |
-| `renderActions?` | `(item) => ReactNode` | Botones de la barra (descargar, imprimir…) |
+| `renderActions?` | `(item) => ReactNode` | Botones extra de la barra (mejor `onDownload`/`onPrint`) |
+| `onDownload?` | `(item) => void` | «Descargar PDF · 1,1 MB» si `canDownload` (fila propia en el teléfono); con `downloadHref` es un enlace |
+| `onPrint?` | `(item) => void` | «Imprimir» si `canDownload` y `canPrint` |
+| `logo?` | `ReactNode` | Logo de la empresa en la barra de escritorio |
 | `renderPdf?` | `(item) => ReactNode` | PDF descargable en el visor pdf.js de la app; sin esto, un `iframe` |
 | `renderBadge?` | `(item) => ReactNode` | Distintivo junto al nombre («Solo lectura») |
 | `labels?` | `Partial<DriveViewerLabels>` | Textos; por defecto `DEFAULT_LABELS` (español neutro) |
@@ -127,11 +145,20 @@ clase que activa esos tokens y el modo (Portal: `"shadcn-surface dark"`).
 (sin descarga, PDF o imagen: `(from, { thumbs }) => Promise<{ pages, from, urls, expiresAt }>`,
 ventanas de `PAGE_URLS_PER_REQUEST` URLs firmadas que el visor renueva 30 s antes de vencer,
 sin polling), `loadStream?` (sin descarga, video: `() => Promise<{ url, watermark }>`; se pide
-de nuevo si el stream vence a mitad), `kicker?` (texto sobre el nombre, la carpeta).
+de nuevo si el stream vence a mitad), `kicker?` (texto sobre el nombre, la carpeta),
+`sizeBytes?` (para «Descargar PDF · 1,1 MB»), `downloadHref?` (adónde va «Descargar»; sin
+él se llama `onDownload`), `canPrint?` (el enlace deja imprimirlo).
+
+**Disposición (v0.23.0):** desde `lg`, una sola barra con volver, logo, icono del tipo,
+nombre, distintivo, «‹ Archivo n de N ›», el campo «Página [n] de N», zoom y «Ajustar al
+ancho». Miniaturas: columna de 200 px con «Miniaturas · N págs» desde `xl`, tira inferior
+en tableta, tira superior en el teléfono («Miniaturas (N páginas) · Pág. n activa»). En el
+teléfono el nombre ocupa hasta 2 líneas, «Descargar» va en su fila y el paginador
+«PÁGINAS n / N» tiene botones de 48 px. Los objetivos táctiles siguen en 44 px como mínimo.
 
 Sin descarga, las páginas se piden en modo CORS (`crossOrigin="anonymous"`) y el video va sin
 control de descarga ni picture-in-picture, bajo la marca en mosaico. Eso solo dificulta: lo que
 protege es que el original nunca llega al navegador (`./drive-share`).
 
-También exporta `DEFAULT_LABELS`, `ViewerButton` y `VIEWER_BUTTON` (la clase de los botones de
+También exporta `DEFAULT_LABELS`, `formatFileSize` (bytes → «1,1 MB»), el tipo `DriveViewerPager`, `ViewerButton` y `VIEWER_BUTTON` (la clase de los botones de
 la barra, 44 px), para que las acciones de la app se vean iguales.

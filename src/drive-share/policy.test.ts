@@ -1,5 +1,8 @@
 import {
+  allowsSomeDownload,
   canDownload,
+  canPrint,
+  canShowContact,
   canZip,
   defaultPolicyForNewLink,
   effectiveDownload,
@@ -104,6 +107,18 @@ describe('canZip and zipExclusions', () => {
     expect(canZip({}, undefined, NOW)).toBe(true);
   });
 
+  it('never zips with the ZIP toggle off, whatever downloads', () => {
+    expect(canZip({ download: true, zip: false }, { files }, NOW)).toBe(false);
+    expect(canZip({ download: true, zip: false }, undefined, NOW)).toBe(false);
+  });
+
+  it('with the ZIP toggle on, still needs something downloadable', () => {
+    expect(canZip({ download: true, zip: true }, { files }, NOW)).toBe(true);
+    expect(canZip({ download: false, zip: true }, { files }, NOW)).toBe(false);
+    expect(canZip({ download: false, zip: true, downloadOverrides: { c: true } }, { files }, NOW)).toBe(true);
+    expect(canZip({ download: false, zip: true }, undefined, NOW)).toBe(false);
+  });
+
   it('never zips on an inactive link', () => {
     expect(canZip({ download: true, revoked: true }, { files }, NOW)).toBe(false);
   });
@@ -118,30 +133,100 @@ describe('canZip and zipExclusions', () => {
   });
 });
 
+const LEGACY_DOWNLOADING = { download: true, downloadOverrides: {}, zip: true, print: true, requireIdentity: false, showContact: false };
+
 describe('normalizeSharePolicy', () => {
-  it('turns a legacy permissions object into an explicit policy that downloads', () => {
-    expect(normalizeSharePolicy({ view: true, downloadZip: true })).toEqual({
-      download: true,
-      downloadOverrides: {},
-      requireIdentity: false,
-    });
+  it('turns a legacy permissions object into an explicit policy that downloads, zips and prints', () => {
+    expect(normalizeSharePolicy({ view: true, downloadZip: true })).toEqual(LEGACY_DOWNLOADING);
   });
 
   it('keeps an explicit refusal and only boolean overrides', () => {
     expect(
       normalizeSharePolicy({ download: false, downloadOverrides: { a: true, b: 'yes', c: false }, requireIdentity: true })
-    ).toEqual({ download: false, downloadOverrides: { a: true, c: false }, requireIdentity: true });
+    ).toEqual({ download: false, downloadOverrides: { a: true, c: false }, zip: true, print: true, requireIdentity: true, showContact: false });
+  });
+
+  it('gives a legacy link that downloads nothing neither ZIP nor print', () => {
+    expect(normalizeSharePolicy({ download: false })).toEqual({ download: false, downloadOverrides: {}, zip: false, print: false, requireIdentity: false, showContact: false });
+  });
+
+  it('keeps the explicit toggles of a v0.23 link', () => {
+    expect(normalizeSharePolicy({ download: true, zip: false, print: false, showContact: true })).toEqual({
+      download: true, downloadOverrides: {}, zip: false, print: false, requireIdentity: false, showContact: true,
+    });
+  });
+
+  it('never shows the contact of a legacy link', () => {
+    expect(normalizeSharePolicy({ download: true }).showContact).toBe(false);
+    expect(normalizeSharePolicy({ showContact: 'yes' }).showContact).toBe(false);
   });
 
   it('survives garbage', () => {
-    expect(normalizeSharePolicy(null)).toEqual({ download: true, downloadOverrides: {}, requireIdentity: false });
-    expect(normalizeSharePolicy({ downloadOverrides: [true] })).toEqual({ download: true, downloadOverrides: {}, requireIdentity: false });
+    expect(normalizeSharePolicy(null)).toEqual(LEGACY_DOWNLOADING);
+    expect(normalizeSharePolicy({ downloadOverrides: [true] })).toEqual(LEGACY_DOWNLOADING);
+  });
+});
+
+describe('canPrint', () => {
+  const file = { mediaId: 'a' };
+
+  it('prints only with the toggle on and the file downloadable', () => {
+    expect(canPrint({ download: true, print: true }, file, NOW)).toBe(true);
+    expect(canPrint({ download: true, print: false }, file, NOW)).toBe(false);
+  });
+
+  it('never prints a file without download: printing needs the original', () => {
+    expect(canPrint({ download: false, print: true }, file, NOW)).toBe(false);
+    expect(canPrint({ download: true, print: true, downloadOverrides: { a: false } }, file, NOW)).toBe(false);
+    expect(canPrint({ download: false, print: true, downloadOverrides: { a: true } }, file, NOW)).toBe(true);
+  });
+
+  it('lets a legacy link print what it lets download', () => {
+    expect(canPrint({}, file, NOW)).toBe(true);
+    expect(canPrint({ download: false }, file, NOW)).toBe(false);
+  });
+
+  it('never prints on an inactive link', () => {
+    expect(canPrint({ download: true, print: true, revoked: true }, file, NOW)).toBe(false);
+    expect(canPrint({ download: true, print: true, expiresAt: NOW - 1 }, file, NOW)).toBe(false);
+  });
+});
+
+describe('canShowContact', () => {
+  it('shows the contact only when explicitly on', () => {
+    expect(canShowContact({ showContact: true })).toBe(true);
+    expect(canShowContact({ showContact: false })).toBe(false);
+    expect(canShowContact({})).toBe(false);
+  });
+
+  it('keeps showing it on an expired or revoked link (the expired page asks for a new one)', () => {
+    expect(canShowContact({ showContact: true, revoked: true })).toBe(true);
+    expect(canShowContact({ showContact: true, expiresAt: NOW - HOUR })).toBe(true);
+  });
+});
+
+describe('allowsSomeDownload', () => {
+  it('is true with the default on or some file allowed', () => {
+    expect(allowsSomeDownload({ download: true })).toBe(true);
+    expect(allowsSomeDownload({ download: false, downloadOverrides: { a: true } })).toBe(true);
+    expect(allowsSomeDownload({})).toBe(true);
+  });
+
+  it('is false when nothing can be downloaded', () => {
+    expect(allowsSomeDownload({ download: false, downloadOverrides: { a: false } })).toBe(false);
   });
 });
 
 describe('new links and identity', () => {
-  it('creates new links with download blocked and identification off', () => {
-    expect(defaultPolicyForNewLink()).toEqual({ download: false, downloadOverrides: {}, requireIdentity: false });
+  it('creates new links with every capability off', () => {
+    expect(defaultPolicyForNewLink()).toEqual({ download: false, downloadOverrides: {}, zip: false, print: false, requireIdentity: false, showContact: false });
+  });
+
+  it('a new link neither zips, prints nor shows the contact', () => {
+    const policy = defaultPolicyForNewLink();
+    expect(canZip(policy, undefined, NOW)).toBe(false);
+    expect(canPrint(policy, { mediaId: 'a' }, NOW)).toBe(false);
+    expect(canShowContact(policy)).toBe(false);
   });
 
   it('returns a fresh object each time', () => {
@@ -174,9 +259,15 @@ describe('previewKindOf and sharedFileAccess', () => {
     expect(sharedFileAccess({ download: false }, { mediaId: 'm', name: 'a.pdf' }, NOW, 12)).toEqual({
       mediaId: 'm',
       canDownload: false,
+      canPrint: false,
       preview: 'pdf',
       pages: 12,
     });
+  });
+
+  it('says a downloadable file prints only with the print toggle', () => {
+    expect(sharedFileAccess({ download: true, print: true }, { mediaId: 'm', name: 'a.pdf' }, NOW).canPrint).toBe(true);
+    expect(sharedFileAccess({ download: true, print: false }, { mediaId: 'm', name: 'a.pdf' }, NOW).canPrint).toBe(false);
   });
 
   it('caps the pages it announces at the render limit', () => {

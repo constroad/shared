@@ -4,6 +4,6 @@
  * names only. The app's Tailwind must scan `dist/drive-viewer` (README).
  */
 export { DriveViewer } from './DriveViewer';
-export { DEFAULT_LABELS } from './labels';
+export { DEFAULT_LABELS, formatFileSize } from './labels';
 export { VIEWER_BUTTON, ViewerButton } from './ViewerControls';
-export type { DriveViewerItem, DriveViewerKind, DriveViewerLabels, DriveViewerPageWindow, DriveViewerPagesLoader, DriveViewerProps, DriveViewerProtectedStream } from './types';
+export type { DriveViewerItem, DriveViewerKind, DriveViewerLabels, DriveViewerPageWindow, DriveViewerPager, DriveViewerPagesLoader, DriveViewerProps, DriveViewerProtectedStream } from './types';

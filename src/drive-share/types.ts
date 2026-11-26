@@ -9,8 +9,14 @@ export interface ShareLinkPolicy {
   download?: boolean;
   /** Per-file exception, by mediaId, in either direction. Wins over `download`. */
   downloadOverrides?: Record<string, boolean>;
+  /** The whole folder as a ZIP (only the files the link lets download). Missing = legacy = what download allowed. */
+  zip?: boolean;
+  /** Printing a file (it needs the original, so only where that file can be downloaded). Missing = legacy = allowed. */
+  print?: boolean;
   /** The viewer proves a phone or email by OTP before seeing; that identity goes into the watermark. */
   requireIdentity?: boolean;
+  /** The public pages (the expired-link page included) offer WhatsApp and a call to the company. Missing = off. */
+  showContact?: boolean;
   /** Absent or null = never expires. Date, ISO string or epoch milliseconds. */
   expiresAt?: Date | string | number | null;
   revoked?: boolean;
@@ -30,6 +36,8 @@ export type SharePreviewKind = 'pdf' | 'image' | 'video' | 'none';
 export interface SharedFileAccess {
   mediaId: string;
   canDownload: boolean;
+  /** The public viewer offers printing this file (`canPrint`). */
+  canPrint: boolean;
   preview: SharePreviewKind;
   /** PDF pages that can be shown, already capped at `MAX_PAGES_PER_DOCUMENT`. */
   pages?: number;

@@ -40,25 +40,43 @@ export function canDownload(link: ShareLinkPolicy, file: Pick<SharedFileRef, 'me
   return isLinkActive(link, now) && effectiveDownload(link.download, overrideOf(link, file.mediaId));
 }
 
-/**
- * Whether the folder ZIP may exist. With the files known: at least one can be
- * downloaded. Without them: the default allows it or some override does.
- */
-export function canZip(link: ShareLinkPolicy, folder?: { files?: Pick<SharedFileRef, 'mediaId'>[] }, now: number = Date.now()): boolean {
-  if (!isLinkActive(link, now)) return false;
-  if (folder?.files) return folder.files.some((file) => canDownload(link, file, now));
+/** The default allows downloading or some file is an exception that does. */
+export function allowsSomeDownload(link: ShareLinkPolicy): boolean {
   if (effectiveDownload(link.download, undefined)) return true;
   return Object.values(link.downloadOverrides ?? {}).some((value) => value === true);
 }
+
+/** An explicit toggle, or what a legacy link (without the field) had: «on wherever something downloads». */
+const toggleOrLegacy = (value: boolean | undefined, link: ShareLinkPolicy): boolean =>
+  typeof value === 'boolean' ? value : allowsSomeDownload(link);
+
+/**
+ * Whether the folder ZIP may exist: the ZIP toggle is on and something can be
+ * downloaded. With the files known: at least one of them; without them, the
+ * default or some override. Files without download stay out (`zipExclusions`).
+ */
+export function canZip(link: ShareLinkPolicy, folder?: { files?: Pick<SharedFileRef, 'mediaId'>[] }, now: number = Date.now()): boolean {
+  if (!isLinkActive(link, now) || !toggleOrLegacy(link.zip, link)) return false;
+  if (folder?.files) return folder.files.some((file) => canDownload(link, file, now));
+  return allowsSomeDownload(link);
+}
+
+/** Printing needs the original: only with the print toggle AND that file downloadable. */
+export function canPrint(link: ShareLinkPolicy, file: Pick<SharedFileRef, 'mediaId'>, now: number = Date.now()): boolean {
+  return toggleOrLegacy(link.print, link) && canDownload(link, file, now);
+}
+
+/** WhatsApp and call buttons on the public pages, the expired-link page included: only when explicitly on. */
+export const canShowContact = (link: ShareLinkPolicy): boolean => link.showContact === true;
 
 /** mediaIds that must stay out of the ZIP. On an inactive link, all of them. */
 export function zipExclusions(link: ShareLinkPolicy, files: Pick<SharedFileRef, 'mediaId'>[], now: number = Date.now()): string[] {
   return files.filter((file) => !canDownload(link, file, now)).map((file) => file.mediaId);
 }
 
-/** Policy of a link created from now on: download blocked, identification off. */
+/** Policy of a link created from now on: every capability off (download, ZIP, print, identification, contact). */
 export function defaultPolicyForNewLink(): ShareLinkPolicy {
-  return { download: false, downloadOverrides: {}, requireIdentity: false };
+  return { download: false, downloadOverrides: {}, zip: false, print: false, requireIdentity: false, showContact: false };
 }
 
 const booleanOverrides = (raw: unknown): Record<string, boolean> => {
@@ -66,13 +84,23 @@ const booleanOverrides = (raw: unknown): Record<string, boolean> => {
   return Object.fromEntries(Object.entries(raw).filter((entry): entry is [string, boolean] => typeof entry[1] === 'boolean'));
 };
 
-/** Whatever is stored (a legacy `permissions` object included) as an explicit policy. */
+/**
+ * Whatever is stored (a legacy `permissions` object included) as an explicit policy.
+ * A legacy link keeps what it had: download allowed, and ZIP and print wherever
+ * something downloads; the contact stays off.
+ */
 export function normalizeSharePolicy(raw: unknown): ShareLinkPolicy {
   const source = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
-  return {
+  const base: ShareLinkPolicy = {
     download: typeof source.download === 'boolean' ? source.download : true,
     downloadOverrides: booleanOverrides(source.downloadOverrides),
+  };
+  return {
+    ...base,
+    zip: toggleOrLegacy(typeof source.zip === 'boolean' ? source.zip : undefined, base),
+    print: toggleOrLegacy(typeof source.print === 'boolean' ? source.print : undefined, base),
     requireIdentity: source.requireIdentity === true,
+    showContact: source.showContact === true,
   };
 }
 
@@ -102,6 +130,7 @@ export function sharedFileAccess(link: ShareLinkPolicy, file: SharedFileRef, now
   const access: SharedFileAccess = {
     mediaId: file.mediaId,
     canDownload: canDownload(link, file, now),
+    canPrint: canPrint(link, file, now),
     preview: previewKindOf(file.mimeType || file.name || ''),
   };
   if (pages !== undefined) access.pages = Math.min(pages, MAX_PAGES_PER_DOCUMENT);

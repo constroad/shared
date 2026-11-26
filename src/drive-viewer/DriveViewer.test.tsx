@@ -1,6 +1,7 @@
 /** @jest-environment @happy-dom/jest-environment */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { DriveViewer } from './DriveViewer';
+import { formatFileSize } from './labels';
 import type { DriveViewerItem } from './types';
 
 const window1 = (urls: string[], pages = urls.length) => Promise.resolve({ pages, from: 1, urls, expiresAt: new Date(Date.now() + 300000).toISOString() });
@@ -8,7 +9,7 @@ const window1 = (urls: string[], pages = urls.length) => Promise.resolve({ pages
 const pdfBlocked: DriveViewerItem = { id: 'p1', name: 'Informe.pdf', kind: 'pdf', canDownload: false, kicker: 'Obra', loadPages: () => window1(['https://lila/p1', 'https://lila/p2', 'https://lila/p3']) };
 const imageBlocked: DriveViewerItem = { id: 'i1', name: 'Foto.jpg', kind: 'image', canDownload: false, loadPages: () => window1(['https://lila/derivative']) };
 const videoBlocked: DriveViewerItem = { id: 'v1', name: 'Obra.mp4', kind: 'video', canDownload: false, loadStream: () => Promise.resolve({ url: 'https://lila/files/v.mp4?t=1', watermark: 'Enlace ABC · 25/11/2026 10:00' }) };
-const pdfOpen: DriveViewerItem = { id: 'p2', name: 'Valorización.pdf', kind: 'pdf', canDownload: true, src: 'https://lila/files/v.pdf?t=1' };
+const pdfOpen: DriveViewerItem = { id: 'p2', name: 'Valorización.pdf', kind: 'pdf', canDownload: true, src: 'https://lila/files/v.pdf?t=1', sizeBytes: 1153434, canPrint: true };
 
 const renderViewer = (items: DriveViewerItem[], currentId: string, extra: Partial<Parameters<typeof DriveViewer>[0]> = {}) => {
   const onNavigate = jest.fn();
@@ -24,7 +25,8 @@ describe('DriveViewer', () => {
     // Assert
     await waitFor(() => expect(screen.getByAltText('Página 1').getAttribute('src')).toBe('https://lila/p1'));
     expect(screen.getByAltText('Página 1').getAttribute('crossorigin')).toBe('anonymous');
-    expect(screen.getByText('Página 1 de 3')).toBeTruthy();
+    expect(screen.getAllByRole('spinbutton', { name: 'Página' })[0].getAttribute('value')).toBe('1');
+    expect(screen.getAllByText('de 3').length).toBeGreaterThan(0);
     expect(screen.getByText(/desactivó la descarga y la impresión/)).toBeTruthy();
     expect(screen.getByText('Obra')).toBeTruthy();
   });
@@ -60,8 +62,8 @@ describe('DriveViewer', () => {
 
   it('moves across the folder files with the arrows, the keyboard and closes with Escape', () => {
     const { onNavigate, onClose } = renderViewer([pdfBlocked, imageBlocked, videoBlocked], 'i1');
-    expect(screen.getByText('2 de 3')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+    expect(screen.getAllByText('Archivo 2 de 3').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Siguiente archivo' })[0]);
     expect(onNavigate).toHaveBeenLastCalledWith('v1');
     fireEvent.keyDown(window, { key: 'ArrowLeft' });
     expect(onNavigate).toHaveBeenLastCalledWith('p1');
@@ -80,5 +82,87 @@ describe('DriveViewer', () => {
   it('says there is no preview for an office file', () => {
     renderViewer([{ id: 'x', name: 'plan.xlsx', kind: 'none', canDownload: false }], 'x');
     expect(screen.getByText('Vista previa no disponible')).toBeTruthy();
+  });
+
+  it('never confuses the file counter with the page counter', async () => {
+    // Arrange / Act
+    renderViewer([pdfBlocked, imageBlocked], 'p1');
+    await waitFor(() => expect(screen.getAllByRole('spinbutton', { name: 'Página' }).length).toBeGreaterThan(0));
+    // Assert
+    expect(screen.getAllByText('Archivo 1 de 2').length).toBeGreaterThan(0);
+    expect(screen.queryByText('1 de 2')).toBeNull();
+    expect(screen.getByText('Miniaturas (3 páginas)')).toBeTruthy();
+  });
+
+  it('jumps to the page typed in the page field', async () => {
+    // Arrange
+    renderViewer([pdfBlocked], 'p1');
+    await waitFor(() => expect(screen.getByAltText('Página 3')).toBeTruthy());
+    const field = screen.getAllByRole('spinbutton', { name: 'Página' })[0] as HTMLInputElement;
+    // Act
+    fireEvent.change(field, { target: { value: '3' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    // Assert
+    await waitFor(() => expect((screen.getAllByRole('spinbutton', { name: 'Página' })[0] as HTMLInputElement).value).toBe('3'));
+    expect(screen.getByText('Pág. 3 activa')).toBeTruthy();
+  });
+
+  it('ignores a page out of range in the page field', async () => {
+    renderViewer([pdfBlocked], 'p1');
+    await waitFor(() => expect(screen.getByAltText('Página 1')).toBeTruthy());
+    const field = screen.getAllByRole('spinbutton', { name: 'Página' })[0] as HTMLInputElement;
+    fireEvent.change(field, { target: { value: '9' } });
+    fireEvent.blur(field);
+    await waitFor(() => expect((screen.getAllByRole('spinbutton', { name: 'Página' })[0] as HTMLInputElement).value).toBe('1'));
+  });
+
+  it('shows the company logo and the file type in the bar', () => {
+    renderViewer([pdfOpen], 'p2', { logo: <img alt="Logo de la empresa" src="https://lila/logo.png" /> });
+    expect(screen.getByAltText('Logo de la empresa')).toBeTruthy();
+    expect(document.body.querySelector('[data-file-kind="pdf"]')).toBeTruthy();
+  });
+
+  it('offers «Descargar PDF · size» and «Imprimir» only when the item allows them', () => {
+    // Arrange
+    const onDownload = jest.fn();
+    const onPrint = jest.fn();
+    renderViewer([pdfOpen], 'p2', { onDownload, onPrint, renderPdf: () => <p>pdfjs</p> });
+    // Act
+    fireEvent.click(screen.getAllByRole('button', { name: 'Descargar PDF · 1,1 MB' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Imprimir' })[0]);
+    // Assert
+    expect(onDownload).toHaveBeenCalledWith(expect.objectContaining({ id: 'p2' }));
+    expect(onPrint).toHaveBeenCalledWith(expect.objectContaining({ id: 'p2' }));
+  });
+
+  it('downloads through the item link when it has one', () => {
+    renderViewer([{ ...pdfOpen, downloadHref: '/api/download/p2' }], 'p2', { renderPdf: () => <p>pdfjs</p> });
+    expect(screen.getAllByRole('link', { name: 'Descargar PDF · 1,1 MB' })[0].getAttribute('href')).toBe('/api/download/p2');
+  });
+
+  it('hides print when the link does not allow it, and both without download', () => {
+    renderViewer([{ ...pdfOpen, canPrint: false }, pdfBlocked], 'p2', { onDownload: jest.fn(), onPrint: jest.fn(), renderPdf: () => <p>pdfjs</p> });
+    expect(screen.queryByRole('button', { name: 'Imprimir' })).toBeNull();
+    expect(screen.getAllByRole('button', { name: 'Descargar PDF · 1,1 MB' }).length).toBeGreaterThan(0);
+  });
+
+  it('a file without download never shows download nor print', () => {
+    renderViewer([{ ...pdfBlocked, canPrint: true, sizeBytes: 10, downloadHref: '/x' }], 'p1', { onDownload: jest.fn(), onPrint: jest.fn() });
+    expect(screen.queryByRole('button', { name: /Descargar/ })).toBeNull();
+    expect(screen.queryByRole('link', { name: /Descargar/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Imprimir' })).toBeNull();
+  });
+});
+
+describe('formatFileSize', () => {
+  it.each([
+    [undefined, ''],
+    [0, ''],
+    [512, '512 B'],
+    [1536, '1,5 KB'],
+    [1153434, '1,1 MB'],
+    [52428800, '50 MB'],
+  ])('%p bytes read as %p', (bytes, text) => {
+    expect(formatFileSize(bytes)).toBe(text);
   });
 });

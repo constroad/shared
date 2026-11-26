@@ -15,7 +15,7 @@ export const ImageView = ({ item, labels, zoom, onZoom }: { item: DriveViewerIte
   if (failed || (item.canDownload && !item.src)) return <NoPreview labels={labels} />;
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex justify-end border-b border-border bg-card px-4 py-2"><ZoomControls zoom={zoom} labels={labels} onZoom={onZoom} /></div>
+      <div className="flex justify-end border-b border-border bg-card px-4 py-2 lg:hidden"><ZoomControls zoom={zoom} labels={labels} onZoom={onZoom} /></div>
       <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-4">
         {src ? (
           <img src={src} alt={item.name} draggable={false} referrerPolicy="no-referrer" crossOrigin={item.canDownload ? undefined : 'anonymous'} onContextMenu={item.canDownload ? undefined : blockGesture}

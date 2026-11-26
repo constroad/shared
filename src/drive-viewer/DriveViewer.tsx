@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode, type TouchEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { DEFAULT_LABELS } from './labels';
-import { FileNavigator, NoPreview, ViewerToolbar } from './ViewerControls';
+import { FileNavigator, NoPreview, PageField, ViewerToolbar, ZoomControls } from './ViewerControls';
+import { ViewerActions } from './ViewerActions';
 import { ImageView, VideoView } from './MediaViews';
 import { PagedView } from './PagedView';
-import type { DriveViewerItem, DriveViewerLabels, DriveViewerProps } from './types';
+import type { DriveViewerItem, DriveViewerLabels, DriveViewerPager, DriveViewerProps } from './types';
 
 /** A horizontal swipe longer than this moves to the next or previous file. */
 const SWIPE_MIN_PX = 60;
@@ -13,6 +14,7 @@ const useFileKeys = (enabled: boolean, onStep: (step: -1 | 1) => void, onClose: 
   useEffect(() => {
     if (!enabled) return undefined;
     const onKey = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLInputElement) return;
       if (event.key === 'Escape') onClose();
       if (event.key === 'ArrowRight') onStep(1);
       if (event.key === 'ArrowLeft') onStep(-1);
@@ -35,21 +37,37 @@ const useSwipe = (onStep: (step: -1 | 1) => void) => {
   };
 };
 
-const ViewerBody = ({ item, labels, zoom, onZoom, renderPdf }: { item: DriveViewerItem; labels: DriveViewerLabels; zoom: number; onZoom: (zoom: number) => void; renderPdf?: (item: DriveViewerItem) => ReactNode }) => {
+const isPaged = (item: DriveViewerItem): boolean => item.kind === 'pdf' && !item.canDownload && Boolean(item.loadPages);
+
+type BodyProps = { item: DriveViewerItem; labels: DriveViewerLabels; zoom: number; onZoom: (zoom: number) => void; onPager: (pager: DriveViewerPager | null) => void; renderPdf?: (item: DriveViewerItem) => ReactNode };
+
+const ViewerBody = ({ item, labels, zoom, onZoom, onPager, renderPdf }: BodyProps) => {
   if (item.kind === 'video') return <VideoView item={item} labels={labels} />;
   if (item.kind === 'image') return <ImageView item={item} labels={labels} zoom={zoom} onZoom={onZoom} />;
   if (item.kind !== 'pdf') return <NoPreview labels={labels} />;
-  if (!item.canDownload && item.loadPages) return <PagedView key={item.id} loader={item.loadPages} labels={labels} zoom={zoom} onZoom={onZoom} multiPage />;
+  if (isPaged(item) && item.loadPages) return <PagedView key={item.id} loader={item.loadPages} labels={labels} zoom={zoom} onZoom={onZoom} multiPage onPager={onPager} />;
   if (renderPdf) return <>{renderPdf(item)}</>;
   return item.src ? <iframe src={item.src} title={item.name} className="min-h-0 w-full flex-1 border-0" /> : <NoPreview labels={labels} />;
 };
 
+/** Page field and zoom in the top bar from `lg` (one bar, Stitch dc02); below, the body draws its own row. */
+const BarTools = ({ item, pager, zoom, labels, onZoom }: { item: DriveViewerItem; pager: DriveViewerPager | null; zoom: number; labels: DriveViewerLabels; onZoom: (zoom: number) => void }) => {
+  if (item.kind !== 'image' && !isPaged(item)) return null;
+  return (
+    <div className="hidden shrink-0 items-center gap-3 lg:flex">
+      {pager && <PageField pager={pager} labels={labels} />}
+      <ZoomControls zoom={zoom} labels={labels} onZoom={onZoom} />
+    </div>
+  );
+};
+
 /** The Drive viewer: one shell for PDF (pages or pdf.js), image and video, moving across the folder's files. */
-export const DriveViewer = ({ items, currentId, onNavigate, onClose, renderActions, renderPdf, renderBadge, labels: overrides, surfaceClassName }: DriveViewerProps) => {
+export const DriveViewer = ({ items, currentId, onNavigate, onClose, renderActions, renderPdf, renderBadge, onDownload, onPrint, logo, labels: overrides, surfaceClassName }: DriveViewerProps) => {
   const labels = { ...DEFAULT_LABELS, ...overrides };
   const index = items.findIndex((item) => item.id === currentId);
   const item = index >= 0 ? items[index] : null;
   const [zoom, setZoom] = useState(100);
+  const [pager, setPager] = useState<DriveViewerPager | null>(null);
   const step = (delta: -1 | 1) => {
     const next = items[index + delta];
     if (next) { setZoom(100); onNavigate(next.id); }
@@ -61,12 +79,16 @@ export const DriveViewer = ({ items, currentId, onNavigate, onClose, renderActio
   return createPortal(
     <div className={surfaceClassName}>
       <div className="fixed inset-0 z-50 flex flex-col bg-background" role="dialog" aria-modal="true" aria-label={item.name}>
-        <ViewerToolbar name={item.name} kicker={item.kicker} badge={renderBadge?.(item)} labels={labels} onClose={onClose}>
-          <FileNavigator index={index} total={items.length} labels={labels} onStep={step} />
+        <ViewerToolbar name={item.name} kind={item.kind} kicker={item.kicker} badge={renderBadge?.(item)} logo={logo} labels={labels} onClose={onClose}>
+          <FileNavigator index={index} total={items.length} labels={labels} onStep={step} className="hidden lg:flex" />
+          <BarTools item={item} pager={pager} zoom={zoom} labels={labels} onZoom={setZoom} />
+          <ViewerActions item={item} labels={labels} onDownload={onDownload} onPrint={onPrint} placement="bar" />
           {renderActions?.(item)}
         </ViewerToolbar>
+        <ViewerActions item={item} labels={labels} onDownload={onDownload} onPrint={onPrint} placement="row" />
+        <FileNavigator index={index} total={items.length} labels={labels} onStep={step} className="flex justify-center border-b border-border bg-card lg:hidden" />
         <div className="flex min-h-0 flex-1 flex-col" {...swipe}>
-          <ViewerBody key={item.id} item={item} labels={labels} zoom={zoom} onZoom={setZoom} renderPdf={renderPdf} />
+          <ViewerBody key={item.id} item={item} labels={labels} zoom={zoom} onZoom={setZoom} onPager={setPager} renderPdf={renderPdf} />
         </div>
       </div>
     </div>,

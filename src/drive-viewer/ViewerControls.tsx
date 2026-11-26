@@ -1,26 +1,39 @@
-import { useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
-import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, FitIcon, MinusIcon, PlusIcon } from './icons';
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type KeyboardEvent, type ReactNode } from 'react';
+import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, FileTextIcon, FitIcon, ImageFileIcon, MinusIcon, PlusIcon, VideoFileIcon } from './icons';
 import { ZOOM_STEPS, cx } from './labels';
-import type { DriveViewerLabels } from './types';
+import type { DriveViewerKind, DriveViewerLabels, DriveViewerPager } from './types';
 
-/** Bar buttons: shadcn tokens, 44 px touch targets. */
+/** Bar buttons: shadcn tokens, 44 px touch targets (Portal portal-premium-ui §2c; Stitch draws 32–38 px). */
 export const VIEWER_BUTTON = 'inline-flex h-11 min-w-[44px] shrink-0 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-sm font-semibold text-foreground shadow-sm transition-[background-color,box-shadow] hover:shadow-md disabled:pointer-events-none disabled:opacity-40';
 
 export const ViewerButton = ({ className, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) => <button type="button" className={cx(VIEWER_BUTTON, className)} {...props} />;
 
-type ToolbarProps = { name: string; kicker?: string; badge?: ReactNode; labels: DriveViewerLabels; onClose: () => void; children?: ReactNode };
+const KIND_ICONS: Partial<Record<DriveViewerKind, () => JSX.Element>> = { pdf: FileTextIcon, image: ImageFileIcon, video: VideoFileIcon };
 
-/** Top bar: back (never compressed), what is open, then the item's controls. */
-export const ViewerToolbar = ({ name, kicker, badge, labels, onClose, children }: ToolbarProps) => (
+const FileKindIcon = ({ kind }: { kind: DriveViewerKind }) => {
+  const Icon = KIND_ICONS[kind] ?? FileTextIcon;
+  return <span data-file-kind={kind} className="hidden shrink-0 text-muted-foreground lg:inline-flex"><Icon /></span>;
+};
+
+type ToolbarProps = { name: string; kind: DriveViewerKind; kicker?: string; badge?: ReactNode; logo?: ReactNode; labels: DriveViewerLabels; onClose: () => void; children?: ReactNode };
+
+/**
+ * The top bar: back, the company logo (desktop), what is open, then the tools. One bar from
+ * `lg` (tablet landscape and desktop, Stitch dc02/dc03); on the phone the name wraps to two lines.
+ */
+export const ViewerToolbar = ({ name, kind, kicker, badge, logo, labels, onClose, children }: ToolbarProps) => (
   <header className="flex shrink-0 items-center gap-2 border-b border-border bg-card px-2 py-2 shadow-sm sm:gap-3 sm:px-4">
-    <ViewerButton onClick={onClose} aria-label={labels.back}>
+    <button type="button" onClick={onClose} aria-label={labels.back}
+      className="inline-flex h-11 min-w-[44px] shrink-0 items-center justify-center gap-2 rounded-lg px-2 text-sm font-semibold text-foreground hover:bg-muted xl:border xl:border-border xl:bg-card xl:px-3 xl:shadow-sm">
       <ArrowLeftIcon />
-      <span className="hidden md:inline">{labels.back}</span>
-    </ViewerButton>
+      <span className="hidden xl:inline">{labels.back}</span>
+    </button>
+    {logo && <span className="hidden shrink-0 items-center gap-3 xl:flex">{logo}<span className="h-6 w-px bg-border" aria-hidden="true" /></span>}
     <div className="flex min-w-0 flex-1 items-center gap-2">
+      <FileKindIcon kind={kind} />
       <div className="min-w-0">
         {kicker && <p className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{kicker}</p>}
-        <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+        <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-foreground lg:line-clamp-1" title={name}>{name}</p>
       </div>
       {badge}
     </div>
@@ -28,33 +41,61 @@ export const ViewerToolbar = ({ name, kicker, badge, labels, onClose, children }
   </header>
 );
 
+const zoomStep = (zoom: number, delta: -1 | 1): number => {
+  const index = ZOOM_STEPS.indexOf(zoom as (typeof ZOOM_STEPS)[number]);
+  return ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, Math.max(0, index + delta))];
+};
+
+/** «− 100 % +» in one muted group, then «Ajustar al ancho» («Ajustar» on the phone). */
 export const ZoomControls = ({ zoom, labels, onZoom }: { zoom: number; labels: DriveViewerLabels; onZoom: (zoom: number) => void }) => {
   const index = ZOOM_STEPS.indexOf(zoom as (typeof ZOOM_STEPS)[number]);
   return (
-    <div className="flex shrink-0 items-center gap-1">
-      <div className="flex items-center rounded-lg border border-border bg-card">
-        <button type="button" className="flex h-10 w-10 items-center justify-center disabled:opacity-40" aria-label={labels.zoomOut} disabled={index <= 0} onClick={() => onZoom(ZOOM_STEPS[Math.max(0, index - 1)])}><MinusIcon /></button>
-        <span className="w-14 text-center font-mono text-xs tabular-nums text-foreground">{zoom} %</span>
-        <button type="button" className="flex h-10 w-10 items-center justify-center disabled:opacity-40" aria-label={labels.zoomIn} disabled={index >= ZOOM_STEPS.length - 1} onClick={() => onZoom(ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, index + 1)])}><PlusIcon /></button>
+    <div className="flex shrink-0 items-center gap-2">
+      <div className="flex items-center rounded-lg border border-border bg-muted">
+        <button type="button" className="flex h-11 w-11 items-center justify-center rounded-l-lg text-foreground disabled:opacity-40" aria-label={labels.zoomOut} disabled={index <= 0} onClick={() => onZoom(zoomStep(zoom, -1))}><MinusIcon /></button>
+        <span className="w-14 border-x border-border bg-card text-center font-mono text-xs leading-[44px] tabular-nums text-foreground">{zoom} %</span>
+        <button type="button" className="flex h-11 w-11 items-center justify-center rounded-r-lg text-foreground disabled:opacity-40" aria-label={labels.zoomIn} disabled={index >= ZOOM_STEPS.length - 1} onClick={() => onZoom(zoomStep(zoom, 1))}><PlusIcon /></button>
       </div>
       <ViewerButton onClick={() => onZoom(100)} aria-label={labels.fit}>
         <FitIcon />
+        <span className="lg:hidden">{labels.fitShort}</span>
         <span className="hidden lg:inline">{labels.fit}</span>
       </ViewerButton>
     </div>
   );
 };
 
-type FileNavProps = { index: number; total: number; labels: DriveViewerLabels; onStep: (step: -1 | 1) => void };
+/** «Página [3] de 12»: the field takes a page number; Enter or leaving it jumps, out of range it goes back. */
+export const PageField = ({ pager, labels }: { pager: DriveViewerPager; labels: DriveViewerLabels }) => {
+  const [typed, setTyped] = useState(String(pager.current));
+  useEffect(() => setTyped(String(pager.current)), [pager.current]);
+  const commit = () => {
+    const page = Number(typed);
+    if (Number.isInteger(page) && page >= 1 && page <= pager.pages && page !== pager.current) pager.goTo(page);
+    else setTyped(String(pager.current));
+  };
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => { if (event.key === 'Enter') commit(); };
+  return (
+    <label className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
+      <span>{labels.pageField}</span>
+      <input type="number" inputMode="numeric" min={1} max={pager.pages} value={typed} aria-label={labels.pageField}
+        onChange={(event) => setTyped(event.target.value)} onBlur={commit} onKeyDown={onKeyDown}
+        className="h-11 w-12 rounded-md border border-border bg-background text-center font-mono text-sm font-semibold tabular-nums text-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+      <span className="font-semibold tabular-nums text-foreground">{labels.pageOf(pager.pages)}</span>
+    </label>
+  );
+};
 
-/** «‹ 3 de 12 ›»: the files of the folder, one after the other. */
-export const FileNavigator = ({ index, total, labels, onStep }: FileNavProps) =>
+type FileNavProps = { index: number; total: number; labels: DriveViewerLabels; onStep: (step: -1 | 1) => void; className?: string };
+
+/** «‹ Archivo 3 de 12 ›»: the files of the folder, one after the other (never the pages). */
+export const FileNavigator = ({ index, total, labels, onStep, className }: FileNavProps) =>
   total < 2 ? null : (
-    <div className="flex shrink-0 items-center gap-1" aria-label="Archivos">
-      <button type="button" className="flex h-10 w-10 items-center justify-center rounded-lg disabled:opacity-40" aria-label={labels.previous} disabled={index <= 0} onClick={() => onStep(-1)}><ChevronLeftIcon /></button>
-      <span className="font-mono text-xs tabular-nums text-muted-foreground">{labels.fileCounter(index + 1, total)}</span>
-      <button type="button" className="flex h-10 w-10 items-center justify-center rounded-lg disabled:opacity-40" aria-label={labels.next} disabled={index >= total - 1} onClick={() => onStep(1)}><ChevronRightIcon /></button>
-    </div>
+    <nav className={cx('shrink-0 items-center gap-1', className)} aria-label={labels.files}>
+      <button type="button" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-40" aria-label={labels.previousFile} disabled={index <= 0} onClick={() => onStep(-1)}><ChevronLeftIcon /></button>
+      <span className="whitespace-nowrap text-xs font-semibold tabular-nums text-muted-foreground">{labels.fileCounter(index + 1, total)}</span>
+      <button type="button" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-40" aria-label={labels.nextFile} disabled={index >= total - 1} onClick={() => onStep(1)}><ChevronRightIcon /></button>
+    </nav>
   );
 
 /** Calls `onVisible` the first time the element nears the viewport. */
