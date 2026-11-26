@@ -1,6 +1,6 @@
 {
   "name": "@constroad/shared",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "private": true,
   "description": "Código de dominio compartido entre las apps de ConstRoad: planilla, consumos, flota, mapa de obra informes de campo, el correo de Google por empresa, el Drive compartido sin descarga y su visor. Puro y sin dependencias; solo `./cubicar` y `./drive-viewer` traen React (peer).",
   "license": "UNLICENSED",
