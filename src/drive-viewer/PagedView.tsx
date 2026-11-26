@@ -127,7 +127,7 @@ export const PagedView = ({ loader, labels, zoom, onZoom, multiPage, onPager }: 
             {main.pages === 0 ? <div className="mx-auto aspect-[1/1.414] w-full max-w-4xl animate-pulse rounded-sm bg-muted" /> : Array.from({ length: main.pages }, (_, index) => index + 1).map((page) => (
               <PageImage key={page} page={page} url={main.urlOf(page)} zoom={zoom} onVisible={() => main.ensurePage(page)} register={register} />
             ))}
-            {main.pages > 0 && <p className="mx-auto flex max-w-2xl items-center justify-center gap-2 px-2 py-4 text-center text-[13px] text-muted-foreground sm:px-4"><LockIcon /><span>{labels.readOnly}</span></p>}
+            {main.pages > 0 && <p className="mx-auto flex max-w-2xl items-center justify-center gap-[3px] px-2 py-4 text-center text-[13px] leading-[14px] text-muted-foreground sm:gap-2 sm:px-4 sm:leading-normal"><LockIcon /><span>{labels.readOnly}</span></p>}
           </div>
         </div>
       </div>

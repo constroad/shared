@@ -59,13 +59,14 @@ const zoomStep = (zoom: number, delta: -1 | 1): number => {
 /**
  * «− 100 % +» in one muted group with a 1 px border (Stitch dc02), then «Ajustar al ancho» from `xl` and «Ajustar»
  * below. Compact under `lg` so the phone row fits 390 px with its 44 px targets (Portal portal-premium-ui §2c).
- * The group clips its buttons: at a 90 % zoom «+» overflowed by a pixel and hid the right border (dc02, 26/11/2026).
+ * The border is an overlay drawn above the buttons: as a plain border its right side smeared into the
+ * muted fill at a 90 % zoom and vanished (dc02, 26/11/2026).
  */
 export const ZoomControls = ({ zoom, labels, onZoom }: { zoom: number; labels: DriveViewerLabels; onZoom: (zoom: number) => void }) => {
   const index = ZOOM_STEPS.indexOf(zoom as (typeof ZOOM_STEPS)[number]);
   return (
     <div className="flex shrink-0 items-center gap-1.5 lg:gap-2">
-      <div className="flex shrink-0 items-center overflow-hidden rounded-lg border border-foreground/15 bg-muted">
+      <div className="relative flex shrink-0 items-center overflow-hidden rounded-lg bg-muted after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:border after:border-foreground/25">
         <button type="button" className="flex h-11 w-11 items-center justify-center bg-transparent text-foreground disabled:opacity-40" aria-label={labels.zoomOut} disabled={index <= 0} onClick={() => onZoom(zoomStep(zoom, -1))}><MinusIcon /></button>
         <span className="w-12 text-center font-mono text-[11px] font-semibold leading-[44px] tabular-nums text-foreground lg:text-xs xl:w-14">{zoom} %</span>
         <button type="button" className="flex h-11 w-11 items-center justify-center bg-transparent text-foreground disabled:opacity-40" aria-label={labels.zoomIn} disabled={index >= ZOOM_STEPS.length - 1} onClick={() => onZoom(zoomStep(zoom, 1))}><PlusIcon /></button>
